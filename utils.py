@@ -5,6 +5,9 @@ import csv
 from datetime import datetime
 from scipy.spatial import distance as dist
 
+
+
+
 def saveImagesToDirectory(counter,img,directory):
     """
     Saves an image to an given directory using a counter

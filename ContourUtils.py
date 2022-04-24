@@ -96,6 +96,48 @@ def warpImg (img,points,w,h,pad=20):
 def findDis(pts1,pts2):
     return ((pts2[0]-pts1[0])**2 + (pts2[1]-pts1[1])**2)**0.5
 
+
+def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_outer_corners=False):
+    """
+    This function detects 4 AruCo Markers from the given Library with the IDs 1,2,3,4 (tl,tr,bl,br) and returns the ROI between them
+    :param frame: the given frame as np array
+    :param dsize: the target size of the returned ROI
+    :param draw: If to draw the detected Corners on the frame
+    :return: the ROI
+    """
+    dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
+
+    # Initialize the detector parameters using default values
+    parameters = cv2.aruco.DetectorParameters_create()
+
+    inner_corners = [2, 3, 0, 1]
+    if use_outer_corners:
+        inner_corners = [0, 1, 2, 3]
+
+    # Detect the markers in the image
+    markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
+
+    if markerIds is not None:
+        if all(elem in markerIds for elem in [[0], [1], [2], [3]]):
+            # print("All in there")
+            index = np.squeeze(np.where(markerIds == 0))
+            refPt1 = np.squeeze(markerCorners[index[0]])[inner_corners[0]].astype(int)
+            index = np.squeeze(np.where(markerIds == 1))
+            refPt2 = np.squeeze(markerCorners[index[0]])[inner_corners[1]].astype(int)
+
+            index = np.squeeze(np.where(markerIds == 2))
+            refPt3 = np.squeeze(markerCorners[index[0]])[inner_corners[2]].astype(int)
+            index = np.squeeze(np.where(markerIds == 3))
+            refPt4 = np.squeeze(markerCorners[index[0]])[inner_corners[3]].astype(int)
+            h2, status2 = cv2.findHomography(np.asarray([refPt1, refPt2, refPt3, refPt4]), np.asarray([[0, 0], [dsize[0], 0], [dsize[0], dsize[1]], [0, dsize[1]]]))
+            warped_image2 = cv2.warpPerspective(frame, h2, dsize)
+            # Mark all the Pints
+            if draw:
+                for point in [refPt1, refPt2, refPt3, refPt4]:
+                    cv2.circle(frame, point, 3, (255, 0, 255), 4)
+            return warped_image2
+
+
 def intersectLines(pt1, pt2, ptA, ptB):
     """ this returns the intersection of Line(pt1,pt2) and Line(ptA,ptB)
 
