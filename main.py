@@ -9,6 +9,9 @@ import ContourUtils
 import gui
 import utils
 from CalibrationWithUncertainty import *
+import pytesseract
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 ################################Config####################
 saveImages = False
@@ -94,8 +97,9 @@ else:
 
 
 cap = cv2.VideoCapture(0)
-cap.set(2,1920)
-cap.set(3,1080)
+cap.set(cv2.CAP_PROP_FPS, 30)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 
 if not loadSavedParameters:
@@ -131,15 +135,15 @@ if loadSavedParameters:
 
 while True:
 
-    succsess, img  = cap.read()
-
+    succsess, img = cap.read()
+    # print(img.shape)
     if succsess:
-        cv2.imshow("Originaimg",img)
+        # cv2.imshow("Originaimg",img)
         img_undist = utils.undistortFunction(img,meanMTX,meanDIST)
+        cv2.imshow("Undist",img_undist)
 
-        #TODO: First do Perspective Transform with this --> Example 4 Aruco Markers around Dart
+        img_undist = ContourUtils.extract_roi_from_4_aruco_markers(img_undist,(600,600))
 
-        img_undist = ContourUtils.extract_roi_from_4_aruco_markers(img_undist,(500,500))
         if img_undist is not None and img_undist.shape[1] > 0 and img_undist.shape[0] > 0:
 
             cannyLow, cannyHigh, noGauss, minArea, errosions, dialations, epsilon, showFilters, automaticMode, textSize = gui.updateTrackBar()
@@ -168,9 +172,6 @@ while True:
                     cv2.ellipse(img_undist, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
 
 
-
-
-
                     cv2.circle(img_undist,center_ellipse,int(a*(radius_1/100)),(255,0,255),2)
                     cv2.circle(img_undist, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 2)
                     cv2.circle(img_undist, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 2)
@@ -187,7 +188,7 @@ while True:
                     rect = cv2.minAreaRect(cnt[4])
                     box = cv2.boxPoints(rect)
                     box = np.int0(box)
-                    cv2.drawContours(img_undist, [box], 0, (0, 0, 255), 2)
+                    # cv2.drawContours(img_undist, [box], 0, (0, 0, 255), 2)
 
 
             # circle_radius = a

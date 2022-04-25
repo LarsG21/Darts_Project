@@ -1,0 +1,5 @@
+numpy~=1.16.6
+pytesseract~=0.3.9
+scipy~=1.7.3
+pillow~=9.0.1
+matplotlib~=3.4.3

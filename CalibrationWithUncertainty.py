@@ -215,11 +215,6 @@ def calibrateCamera(cap,rows,columns,squareSize,runs,saveImages = False, webcam 
                 first = False
             else:
                 allpoints = np.concatenate((allpoints,imgpoints2))
-            print("Das ist ein error")
-            #print(allErrors)
-            print(len(allErrors))
-            print("Zum Punkt")
-            print(len(allpoints))
             print(allpoints.shape)
             #print(allpoints)
             #cv2.waitKey(2000)
