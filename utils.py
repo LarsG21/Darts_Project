@@ -2,10 +2,31 @@ import cv2
 import os
 import ContourUtils
 import csv
+import pandas as pd
+
 from datetime import datetime
 from scipy.spatial import distance as dist
 
+def rez(img, factor=0.5):
+    new = cv2.resize(img, dsize=(0, 0), fx=factor, fy=factor)
+    return new
 
+
+
+def get_max_webcam_resolution(cap):
+
+    url = "https://en.wikipedia.org/wiki/List_of_common_resolutions"
+    table = pd.read_html(url)[0]
+    table.columns = table.columns.droplevel()
+    cap = cv2.VideoCapture(0)
+    resolutions = {}
+    for index, row in table[["W", "H"]].iterrows():
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, row["W"])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, row["H"])
+        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        resolutions[str(width) + "x" + str(height)] = "OK"
+    print(resolutions)
 
 
 def saveImagesToDirectory(counter,img,directory):
@@ -161,3 +182,16 @@ def writeLinestoCSV(startPointList, endPointList, distanceList):
         spamwriter.writerow(["point1", "distance", "point2"])
         for (point1,distance,point2) in zip(startPointList,distanceList,endPointList):
             spamwriter.writerow([point1,round(distance,6),point2])
+
+
+if __name__ == "__main__":
+
+    cap = cv2.VideoCapture(0)
+    #get_max_webcam_resolution(cap)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    while True:
+        succsess, img = cap.read()
+        if succsess:
+            cv2.imshow("Img",img)
+            cv2.waitKey(1)
