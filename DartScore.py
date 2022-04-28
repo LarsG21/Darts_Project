@@ -55,7 +55,13 @@ class Score:
         if (0 <= firstThrow <= 20) and (0 <= secondThrow <= 20) and (0 <= thirdThrow <= 20):
             if (1 <= firstMultiplier <= 3) and (1 <= secondMultiplier <= 3) and (1 <= thirdMultiplier <= 3):
                 hitDouble = False
+
+                # Evaluate, if the player has hit a double or a bull field
                 if (firstMultiplier == 2) or (secondMultiplier == 2) or (thirdMultiplier == 2):
+                    hitDouble = True
+                if (firstThrow == 25) or (secondThrow == 25) or (thirdThrow == 25):
+                    hitDouble = True
+                if (firstThrow == 50) or (secondThrow == 50) or (thirdThrow == 50):
                     hitDouble = True
                 return firstThrow * firstMultiplier + secondThrow * secondMultiplier + thirdThrow * thirdMultiplier, hitDouble
         print("Invalid Throw! Could not calculate the points.")
