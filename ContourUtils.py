@@ -11,10 +11,10 @@ def midpoint(ptA, ptB):
     :param ptB: 2D numpy Array
     :return: 2D numpy array
     """
-    return ((ptA[0,0] + ptB[0,0]) * 0.5, (ptA[0,1] + ptB[0,1]) * 0.5)
+    return (ptA[0, 0] + ptB[0, 0]) * 0.5, (ptA[0, 1] + ptB[0, 1]) * 0.5
 
 
-def get_contours(img, shapeROI = (0,0), cThr=[100, 150], gaussFilters = 1,dialations = 6,errsoions = 2, showFilters=False, minArea=100, epsilon = 0.01, Cornerfilter=0, draw=False):
+def get_contours(img, shapeROI = (0, 0), cThr=[100, 150], gaussFilters = 1, dialations = 6, errsoions = 2, showFilters=False, minArea=100, epsilon=0.01, Cornerfilter=0, draw=False):
     """
     gets Contours from an image
 
@@ -28,24 +28,26 @@ def get_contours(img, shapeROI = (0,0), cThr=[100, 150], gaussFilters = 1,dialat
     :param draw: draws detected contours on img
     :return: image with contours on it, (length of contour, area of contour, poly approximation, boundingbox to the contour, i)
     """
-    minArea = minArea/100   #HIGHLIGHT: Only for very small resolution testing
+    minArea = minArea/100   # HIGHLIGHT: Only for very small resolution testing
     imgContours = img
-    #imgContours = cv2.UMat(img)
+    # imgContours = cv2.UMat(img)
     imgGray = cv2.cvtColor(imgContours, cv2.COLOR_BGR2GRAY)
     for i in range(gaussFilters):
-       imgGray = cv2.GaussianBlur(imgGray, (11, 11),1)
-    if showFilters: cv2.imshow("Gauss",cv2.resize(imgGray, (int(shapeROI[0]),int(shapeROI[1])), interpolation=cv2.INTER_AREA,fx=0.5,fy=0.5))
+       imgGray = cv2.GaussianBlur(imgGray, (11, 11), 1)
+    if showFilters:
+        cv2.imshow("Gauss", cv2.resize(imgGray, (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
     imgCanny = cv2.Canny(imgGray, cThr[0], cThr[1])
     kernel = np.ones((3, 3))
     imgDial = cv2.dilate(imgCanny, kernel, iterations=dialations)
     imgThre = cv2.erode(imgDial, kernel, iterations=errsoions)
-    if showFilters: cv2.imshow('Canny',cv2.resize(imgThre, (int(shapeROI[0]),int(shapeROI[1])), interpolation=cv2.INTER_AREA,fx=0.5,fy=0.5))
-    contours, hiearchy = cv2.findContours(imgThre, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    if showFilters:
+        cv2.imshow('Canny', cv2.resize(imgThre, (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
+    contours, hiearchy = cv2.findContours(imgThre, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     finalCountours = []
     for i in contours:
         area = cv2.contourArea(i)
         if area > minArea:
-            #print('minAreaFilled')
+            # print('minAreaFilled')
             peri = cv2.arcLength(i, True)
             approx = cv2.approxPolyDP(i, epsilon * peri, True)
             bbox = cv2.boundingRect(approx)
@@ -71,30 +73,32 @@ def reorder(myPoints):
     :param myPoints: list of points (np array)
     :return: reordered points (np array)
     """
-    if myPoints.shape == (1,1,4,2):   #4,1,2
-        myPoints = myPoints.reshape(4,1,2)
+    if myPoints.shape == (1, 1, 4, 2):   # 4,1,2
+        myPoints = myPoints.reshape(4, 1, 2)
         myPointsNew = np.zeros_like(myPoints)
-        myPoints = myPoints.reshape((4,2))
-        #print("RESHAPED_MTX",myPointsNew)
+        myPoints = myPoints.reshape((4, 2))
+        # print("RESHAPED_MTX",myPointsNew)
         add = myPoints.sum(1)
         myPointsNew[0] = myPoints[np.argmin(add)]
         myPointsNew[3] = myPoints[np.argmax(add)]
-        diff = np.diff(myPoints,axis=1)
-        myPointsNew[1]= myPoints[np.argmin(diff)]
+        diff = np.diff(myPoints, axis=1)
+        myPointsNew[1] = myPoints[np.argmin(diff)]
         myPointsNew[2] = myPoints[np.argmax(diff)]
         return myPointsNew
 
-def warpImg (img,points,w,h,pad=20):
+
+def warpImg (img, points, w, h, pad=20):
     # print(points)
-    points =reorder(points)
+    points = reorder(points)
     pts1 = np.float32(points)
-    pts2 = np.float32([[0,0],[w,0],[0,h],[w,h]])
-    matrix = cv2.getPerspectiveTransform(pts1,pts2)
-    imgWarp = cv2.warpPerspective(img,matrix,(w,h))
-    imgWarp = imgWarp[pad:imgWarp.shape[0]-pad,pad:imgWarp.shape[1]-pad]
+    pts2 = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
+    matrix = cv2.getPerspectiveTransform(pts1, pts2)
+    imgWarp = cv2.warpPerspective(img, matrix, (w, h))
+    imgWarp = imgWarp[pad:imgWarp.shape[0]-pad, pad:imgWarp.shape[1]-pad]
     return imgWarp
 
-def findDis(pts1,pts2):
+
+def findDis(pts1, pts2):
     return ((pts2[0]-pts1[0])**2 + (pts2[1]-pts1[1])**2)**0.5
 
 
@@ -183,6 +187,7 @@ def intersectLines(pt1, pt2, ptA, ptB):
     y = (y1 + r * dy1 + y + s * dy) / 2.0
     return x, y
 
+
 def intersectLineCircle(center, radius, p1, p2):
     baX = p2[0] - p1[0]
     baY = p2[1] - p1[1]
@@ -210,4 +215,3 @@ def intersectLineCircle(center, radius, p1, p2):
 
     pint2 = p1[0] - baX * abScalingFactor2, p1[1] - baY * abScalingFactor2
     return True, pint1, True, pint2
-

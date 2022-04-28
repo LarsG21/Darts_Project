@@ -7,10 +7,10 @@ import pandas as pd
 from datetime import datetime
 from scipy.spatial import distance as dist
 
+
 def rez(img, factor=0.5):
     new = cv2.resize(img, dsize=(0, 0), fx=factor, fy=factor)
     return new
-
 
 
 def get_max_webcam_resolution(cap):
@@ -29,7 +29,7 @@ def get_max_webcam_resolution(cap):
     print(resolutions)
 
 
-def saveImagesToDirectory(counter,img,directory):
+def saveImagesToDirectory(counter, img, directory):
     """
     Saves an image to an given directory using a counter
     :param counter: counter needs to be increased for every new image to avoid overwriting
@@ -37,15 +37,15 @@ def saveImagesToDirectory(counter,img,directory):
     :param directory: the desired directory (string)
     :return: none
     """
-    owd = os.getcwd()       #save original directory
+    owd = os.getcwd()       # save original directory
     if os.path.exists(directory):
-        os.chdir(directory)     #change working directory
+        os.chdir(directory)     # change working directory
     else:
         print("ERROR: Directory not Found")
     filename = 'savedImage' + str(counter) + '.TIF'
-    cv2.imwrite(filename, img)  # in Ordner Speichern
+    cv2.imwrite(filename, img)  # save in folder
     print(counter)
-    os.chdir(owd)       #go back to original directory
+    os.chdir(owd)       # go back to original directory
 
 
 def saveFileToDirectory(filename,filetype,file,directory):
@@ -54,12 +54,11 @@ def saveFileToDirectory(filename,filetype,file,directory):
     else:
         print("ERROR: Directory not Found")
     name = filename + '.' + filetype
-    cv2.imwrite(name, file)  # in Ordner Speichern
-    print("Saved",name)
+    cv2.imwrite(name, file)  # save in folder
+    print("Saved", name)
 
 
-
-def undistortFunction(img,mtx,dist):
+def undistortFunction(img, mtx, dist):
     """
     undistorts an image given the camera matrix and distortion coefficients
     :param img: the image to undistort
@@ -74,12 +73,13 @@ def undistortFunction(img,mtx,dist):
     dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
 
     # crop the image
-    x,y,w,h = roi
+    x, y, w, h = roi
     dst = dst[y:y+h, x:x+w]
-    #cv2.imwrite('calibresult.png',dst)
+    # cv2.imwrite('calibresult.png', dst)
     return dst
 
-def calculatePixelsPerMetric(img,reorderd,ArucoSize,draw = True):
+
+def calculatePixelsPerMetric(img, reorderd, ArucoSize, draw = True):
     """
     Calculates the pixels/mm in a given image with an AruCo marker (in the plane of the marker)
     :param img: image with AruCo marker
@@ -90,7 +90,7 @@ def calculatePixelsPerMetric(img,reorderd,ArucoSize,draw = True):
     """
 
     (tltrX, tltrY) = ContourUtils.midpoint(reorderd[0], reorderd[1])  # top left,top right
-    (blbrX, blbrY) = ContourUtils.midpoint(reorderd[2], reorderd[3])  # bottom left, botto right
+    (blbrX, blbrY) = ContourUtils.midpoint(reorderd[2], reorderd[3])  # bottom left, bottom right
     (tlblX, tlblY) = ContourUtils.midpoint(reorderd[0], reorderd[2])
     (trbrX, trbrY) = ContourUtils.midpoint(reorderd[1], reorderd[3])
     if draw:
@@ -98,7 +98,7 @@ def calculatePixelsPerMetric(img,reorderd,ArucoSize,draw = True):
         cv2.circle(img, (int(blbrX), int(blbrY)), 1, (255, 255, 0), 2)
         cv2.circle(img, (int(tlblX), int(tlblY)), 1, (255, 255, 0), 2)
         cv2.circle(img, (int(trbrX), int(trbrY)), 1, (255, 255, 0), 2)
-        cv2.line(img, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),  # Draws Lines in Center
+        cv2.line(img, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),  # draws lines in Center
                  (255, 0, 255), 2)
         cv2.line(img, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
                  (255, 0, 255), 2)
@@ -107,7 +107,7 @@ def calculatePixelsPerMetric(img,reorderd,ArucoSize,draw = True):
     dX = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
     pixelsPerMetric = (dX + dY) / 2 * (1 / ArucoSize)  # Calculates Pixels/Length Parameter
     dimA = dY / pixelsPerMetric
-    dimB = dX / pixelsPerMetric  # Dimention of Marker
+    dimB = dX / pixelsPerMetric  # Dimension of Marker
     if draw:
         cv2.putText(img, "{:.1f}mm".format(dimA),
                     (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
@@ -118,9 +118,7 @@ def calculatePixelsPerMetric(img,reorderd,ArucoSize,draw = True):
     return pixelsPerMetric
 
 
-
-
-def undistortPicture(cap,saveImages,meanMTX,meanDIST):
+def undistortPicture(cap, saveImages, meanMTX, meanDIST):
     """
     takes an image from a webcam cap and undistorts it, optionally saves image
     :param cap: webcam object
@@ -131,21 +129,22 @@ def undistortPicture(cap,saveImages,meanMTX,meanDIST):
     """
     print("Take picture to undistort")
     while True:
-        succsess, img = cap.read()
+        success, img = cap.read()
         cv2.imshow("Calib_Chess", img)
         if cv2.waitKey(1) & 0xff == ord('q'):
             break
         if cv2.waitKey(1) & 0xff == ord('x'):
-            succsess,image = cap.read()
-            cv2.imshow("Distorted",image)
+            success, image = cap.read()
+            cv2.imshow("Distorted", image)
             if saveImages:
-                saveImagesToDirectory("_distorted",image, "C:\\Users\\Lars\\Desktop\\TestBilder")
-            undist = undistortFunction(image,meanMTX,meanDIST)
-            cv2.imshow("Undistorted",undist)
+                saveImagesToDirectory("_distorted", image, "C:\\Users\\Lars\\Desktop\\TestBilder")
+            undist = undistortFunction(image, meanMTX, meanDIST)
+            cv2.imshow("Undistorted", undist)
             if saveImages:
-                saveImagesToDirectory("_undistorted",undist, "C:\\Users\\Lars\\Desktop\\TestBilder")
+                saveImagesToDirectory("_undistorted", undist, "C:\\Users\\Lars\\Desktop\\TestBilder")
             cv2.waitKey(2000)
         cv2.waitKey(1)
+
 
 def cropImage(im):
     """
@@ -156,16 +155,17 @@ def cropImage(im):
     # Read image
     scale = 0.15
     imcopy = im.copy()
-    resized = cv2.resize(imcopy,(int(imcopy.shape[1]*scale),int(imcopy.shape[0]*scale)))  #select in scaled image
+    resized = cv2.resize(imcopy, (int(imcopy.shape[1]*scale), int(imcopy.shape[0]*scale)))  # select in scaled image
     # Select ROI
     r = cv2.selectROI(resized)
 
     # Crop image
-    imCrop = im[int(r[1]/scale):int((r[1] + r[3])/scale), int(r[0]/scale):int((r[0] + r[2])/scale)]  #acually resize the original
+    imCrop = im[int(r[1]/scale):int((r[1] + r[3])/scale), int(r[0]/scale):int((r[0] + r[2])/scale)]  # actually resize the original
     shape = imCrop.shape
 
     # Display cropped image
     return imCrop, shape
+
 
 def writeLinestoCSV(startPointList, endPointList, distanceList):
     """
@@ -180,18 +180,18 @@ def writeLinestoCSV(startPointList, endPointList, distanceList):
         spamwriter = csv.writer(csvfile, delimiter=';',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
         spamwriter.writerow(["point1", "distance", "point2"])
-        for (point1,distance,point2) in zip(startPointList,distanceList,endPointList):
-            spamwriter.writerow([point1,round(distance,6),point2])
+        for (point1, distance, point2) in zip(startPointList, distanceList, endPointList):
+            spamwriter.writerow([point1, round(distance, 6), point2])
 
 
 if __name__ == "__main__":
 
     cap = cv2.VideoCapture(0)
-    #get_max_webcam_resolution(cap)
+    # get_max_webcam_resolution(cap)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     while True:
-        succsess, img = cap.read()
-        if succsess:
-            cv2.imshow("Img",img)
+        success, img = cap.read()
+        if success:
+            cv2.imshow("Img", img)
             cv2.waitKey(1)

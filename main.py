@@ -10,26 +10,26 @@ import ContourUtils
 import gui
 import utils
 from CalibrationWithUncertainty import *
-#import pytesseract
+# import pytesseract
 
 import DartScore
 import math
 
-#pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-################################Config####################
+# #############  Config  ####################
 saveImages = False
 undistiortTestAfterCalib = False
 saveParametersPickle = False
 loadSavedParameters = True
 webcam = True
-rows = 6            #17   6
-columns = 9         #28    9
-squareSize = 30 #mm
+rows = 6            # 17   6
+columns = 9         # 28    9
+squareSize = 30     # mm
 calibrationRuns = 1
 
 
-################################Config####################
+# #############  Config  #####################
 
 points = []
 intersectp = []
@@ -37,32 +37,34 @@ ellipse_vertices = []
 newpoints = []
 intersectp_s = []
 
-######## Score - Test ###########
-#score = DartScore.Score(501,True)
-#points = score.calculatePoints(17,1,20,2,0,1)
-#score.pointsScored(points[0], points[1])
-#print(score.currentScore)
+# ####### Score - Test ###########
+# score = DartScore.Score(501,True)
+# points = score.calculatePoints(17,1,20,2,0,1)
+# score.pointsScored(points[0], points[1])
+# print(score.currentScore)
 
-#points = score.calculatePoints(20,3,20,3,20,3)
-#score.pointsScored(points[0], points[1])
-#print(score.currentScore)
+# points = score.calculatePoints(20,3,20,3,20,3)
+# score.pointsScored(points[0], points[1])
+# print(score.currentScore)
 
-#points = score.calculatePoints(20,3,20,3,20,3)
-#score.pointsScored(points[0], points[1])
-#print(score.currentScore)
+# points = score.calculatePoints(20,3,20,3,20,3)
+# score.pointsScored(points[0], points[1])
+# print(score.currentScore)
 
-#points = score.calculatePoints(19,3,2,3,1,3)
-#score.pointsScored(points[0], points[1])
-#print(score.currentScore)
+# points = score.calculatePoints(19,3,2,3,1,3)
+# score.pointsScored(points[0], points[1])
+# print(score.currentScore)
 
-#points = score.calculatePoints(0,1,0,2,9,2)
-#score.pointsScored(points[0], points[1])
-#print(score.currentScore)
+# points = score.calculatePoints(0,1,0,2,9,2)
+# score.pointsScored(points[0], points[1])
+# print(score.currentScore)
 #############################################
 
 
-# get the radius and the angle of the thrown point in relation to the board center
 def getRadiusAndAngle(centerX, centerY, pointX, pointY):
+    """
+    get the radius and the angle of the thrown point in relation to the board center
+    """
     radius = -1.0   # indicates an error state
     angle = 0.0
     if (centerX >= 0) and (centerY >= 0) and (pointX >= 0) and (pointY >= 0):
@@ -108,8 +110,10 @@ innerDoubleLimit = 95.0
 outerBoardLimit = 100.0
 
 
-# evaluates the value and the multiplier of the field with given radius and angle
 def evaluateThrow(radius, angle):
+    """
+    evaluates the value and the multiplier of the field with given radius and angle
+    """
     value = -1      # -1 is error state
     multiplier = 1
 
@@ -151,10 +155,13 @@ print(evaluateThrow(radius, angle))
 mainImage = cv2.imread("Recources/Main Frame.PNG")
 root_wind = "Object measurement"
 cv2.namedWindow(root_wind)
-cv2.imshow(root_wind,mainImage)
+cv2.imshow(root_wind, mainImage)
+
 
 def empty(a):
     pass
+
+
 slider = "Edge Detection Settings"
 filters = "General Settings"
 dart_settings = "Dart Settings"
@@ -162,45 +169,41 @@ cv2.namedWindow(filters)
 cv2.namedWindow(slider)
 cv2.namedWindow(dart_settings)
 
-cv2.resizeWindow("General Settings",400,100)
+cv2.resizeWindow("General Settings", 400, 100)
 cv2.resizeWindow("Edge Detection Settings", 640, 240)
 cv2.resizeWindow("Dart Settings", 640, 240)
 
-cv2.createTrackbar("Edge Thresh Low","Edge Detection Settings", 80, 255, empty)
-cv2.createTrackbar("Edge Thresh High","Edge Detection Settings", 160, 255, empty)
-cv2.createTrackbar("Gaussian's","Edge Detection Settings", 2, 20, empty)
-cv2.createTrackbar("Dilations","Edge Detection Settings", 1, 10, empty)
-cv2.createTrackbar("Erosions","Edge Detection Settings", 1, 10, empty)
-cv2.createTrackbar("minArea","Edge Detection Settings", 800, 500000, empty)
-cv2.createTrackbar("Epsilon","Edge Detection Settings", 5, 40, empty)
-cv2.createTrackbar("Show Filters","General Settings", 1, 1, empty)
-cv2.createTrackbar("Automatic","General Settings",0,1,empty)
-cv2.createTrackbar("TextSize","General Settings",100,400,empty)
+cv2.createTrackbar("Edge Thresh Low", "Edge Detection Settings", 80, 255, empty)
+cv2.createTrackbar("Edge Thresh High", "Edge Detection Settings", 160, 255, empty)
+cv2.createTrackbar("Gaussian's", "Edge Detection Settings", 2, 20, empty)
+cv2.createTrackbar("Dilations", "Edge Detection Settings", 1, 10, empty)
+cv2.createTrackbar("Erosions", "Edge Detection Settings", 1, 10, empty)
+cv2.createTrackbar("minArea", "Edge Detection Settings", 800, 500000, empty)
+cv2.createTrackbar("Epsilon", "Edge Detection Settings", 5, 40, empty)
+cv2.createTrackbar("Show Filters", "General Settings", 1, 1, empty)
+cv2.createTrackbar("Automatic", "General Settings", 0, 1, empty)
+cv2.createTrackbar("TextSize", "General Settings", 100, 400, empty)
 
-cv2.createTrackbar("Circle1","Dart Settings",100,100,empty)
-cv2.createTrackbar("Circle2","Dart Settings",100,100,empty)
-cv2.createTrackbar("Circle3","Dart Settings",100,100,empty)
-cv2.createTrackbar("Circle3","Dart Settings",100,100,empty)
+cv2.createTrackbar("Circle1", "Dart Settings", 100, 100, empty)
+cv2.createTrackbar("Circle2", "Dart Settings", 100, 100, empty)
+cv2.createTrackbar("Circle3", "Dart Settings", 100, 100, empty)
+cv2.createTrackbar("Circle3", "Dart Settings", 100, 100, empty)
 
-cv2.createTrackbar("X_Offset","Dart Settings",0,100,empty)
+cv2.createTrackbar("X_Offset", "Dart Settings", 0, 100, empty)
 cv2.setTrackbarMin("X_Offset", "Dart Settings", -100)
-cv2.createTrackbar("Y_Offset","Dart Settings",0,100,empty)
+cv2.createTrackbar("Y_Offset", "Dart Settings", 0, 100, empty)
 cv2.setTrackbarMin("Y_Offset", "Dart Settings", -100)
 
 
-
-#######################################################################
-
-
-#################################Program Starting Screen#####################################
-keyEvent = cv2.waitKey(0) #next imageqq
-if keyEvent == ord('1'):            #calibrate and save
+# #################  Program Starting Screen  ########################
+keyEvent = cv2.waitKey(0)   # next image
+if keyEvent == ord('1'):    # calibrate and save
     saveParametersPickle = True
     loadSavedParameters = False
-elif keyEvent == ord('2'):          #just calibrate
+elif keyEvent == ord('2'):      # just calibrate
     saveParametersPickle = False
     loadSavedParameters = False
-elif keyEvent == ord('3'):      #masure
+elif keyEvent == ord('3'):      # measure
     saveParametersPickle = False
     loadSavedParameters = True
 elif keyEvent == ord('q'):
@@ -219,11 +222,11 @@ if not loadSavedParameters:
     meanMTX, meanDIST, uncertaintyMTX, uncertaintyDIST = CalibrationWithUncertainty.calibrateCamera(cap=cap, rows=rows, columns=columns, squareSize=squareSize, runs=calibrationRuns,
                                                                                                     saveImages=False, webcam=webcam)
 if saveParametersPickle:
-    pickle_out_MTX = open("PickleFiles/mtx.pickle","wb")
-    pickle.dump(meanMTX,pickle_out_MTX)
+    pickle_out_MTX = open("PickleFiles/mtx.pickle", "wb")
+    pickle.dump(meanMTX, pickle_out_MTX)
     pickle_out_MTX.close()
-    pickle_out_DIST = open("PickleFiles/dist.pickle","wb")
-    pickle.dump(meanDIST,pickle_out_DIST)
+    pickle_out_DIST = open("PickleFiles/dist.pickle", "wb")
+    pickle.dump(meanDIST, pickle_out_DIST)
     pickle_out_DIST.close()
     pickle_out_MTX_Un = open("PickleFiles/uncertaintyMtx.pickle", "wb")
     pickle.dump(uncertaintyMTX, pickle_out_MTX_Un)
@@ -234,7 +237,7 @@ if saveParametersPickle:
     print("Parameters Saved")
 
 if loadSavedParameters:
-    pickle_in_MTX = open("PickleFiles/mtx.pickle","rb")
+    pickle_in_MTX = open("PickleFiles/mtx.pickle", "rb")
     meanMTX = pickle.load(pickle_in_MTX)
     print(meanMTX)
     pickle_in_DIST = open("PickleFiles/dist.pickle", "rb")
@@ -242,33 +245,30 @@ if loadSavedParameters:
     print(meanDIST)
     print("Parameters Loaded")
 
-
-########################################################################################################
-
+#####################################################################################
 
 while True:
-
-    succsess, img = cap.read()
+    success, img = cap.read()
     # print(img.shape)
-    if succsess:
-        # cv2.imshow("Originaimg",img)
-        img_undist = utils.undistortFunction(img,meanMTX,meanDIST)
-        cv2.imshow("Undist",img_undist)
+    if success:
+        # cv2.imshow("Originalimg",img)
+        img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+        cv2.imshow("Undist", img_undist)
 
-        img_undist = ContourUtils.extract_roi_from_4_aruco_markers(img_undist,(600,600))
+        img_undist = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, (600, 600))
 
         if img_undist is not None and img_undist.shape[1] > 0 and img_undist.shape[0] > 0:
 
             cannyLow, cannyHigh, noGauss, minArea, errosions, dialations, epsilon, showFilters, automaticMode, textSize = gui.updateTrackBar()
 
             imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_undist, cThr=(cannyLow, cannyHigh), gaussFilters=noGauss, minArea=minArea, epsilon=epsilon, draw=False,
-                                                            errsoions=errosions,dialations=dialations,showFilters=showFilters)  # gets Contours from Image
+                                                            errsoions=errosions, dialations=dialations, showFilters=showFilters)  # gets Contours from Image
 
             cv2.imshow("Contours", imgContours)
 
             for cnt in contours:
                 if 200000/4 < cnt[1] < 1000000/4:
-                    radius_1,radius_2,radius_3,x_offset,y_offset = gui.update_dart_trackbars()
+                    radius_1, radius_2, radius_3, x_offset, y_offset = gui.update_dart_trackbars()
 
                     ellipse = cv2.fitEllipse(cnt[4])
                     cv2.ellipse(img_undist, ellipse, (0, 255, 0), 5)
@@ -284,12 +284,11 @@ while True:
 
                     cv2.ellipse(img_undist, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
 
-
-                    cv2.circle(img_undist,center_ellipse,int(a*(radius_1/100)),(255,0,255),2)
+                    cv2.circle(img_undist, center_ellipse, int(a*(radius_1/100)), (255, 0, 255), 2)
                     cv2.circle(img_undist, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 2)
                     cv2.circle(img_undist, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 2)
 
-                    #cv2.circle(image_proc_img, (int(x), int(y-b/2)), 3, cv.CV_RGB(0, 255, 0), 2, 8)
+                    # cv2.circle(image_proc_img, (int(x), int(y-b/2)), 3, cv.CV_RGB(0, 255, 0), 2, 8)
 
                     # vertex calculation
                     xb = b * math.cos(angle)
@@ -302,7 +301,6 @@ while True:
                     box = cv2.boxPoints(rect)
                     box = np.int0(box)
                     # cv2.drawContours(img_undist, [box], 0, (0, 0, 255), 2)
-
 
             # circle_radius = a
             #
@@ -378,8 +376,8 @@ while True:
             #                 p.append((x3, y3))
             #                 p.append((x4, y4))
             #
-            #                 intersectpx, intersectpy = ContourUtils.intersectLines(p[counter], p[counter + 1], p[counter + 2],
-            #                                                           p[counter + 3])
+            #                 intersectpx, intersectpy = ContourUtils.intersectLines(p[counter], p[counter + 1],
+            #                                                                   p[counter + 2], p[counter + 3])
             #
             #                 # consider only intersection close to the center of the image
             #                 if (intersectpx < 100 or intersectpx > 800) or (intersectpy < 100 or intersectpy > 800):
@@ -415,6 +413,7 @@ while True:
             #     for lin in lines_seg:
             #         line_p1 = M.dot(np.transpose(np.hstack([lin[0], 1])))
             #         line_p2 = M.dot(np.transpose(np.hstack([lin[1], 1])))
+
             #         inter1, inter_p1, inter2, inter_p2 = ContourUtils.intersectLineCircle(np.asarray(center_ellipse), circle_radius, np.asarray(line_p1), np.asarray(line_p2))
             #         # cv2.line(image_proc_img, (int(line_p1[0]), int(line_p1[1])), (int(line_p2[0]), int(line_p2[1])), cv.CV_RGB(255, 0, 0), 2, 8)
             #         if inter1:
