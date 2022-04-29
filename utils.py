@@ -18,7 +18,6 @@ def get_max_webcam_resolution(cap):
     url = "https://en.wikipedia.org/wiki/List_of_common_resolutions"
     table = pd.read_html(url)[0]
     table.columns = table.columns.droplevel()
-    cap = cv2.VideoCapture(0)
     resolutions = {}
     for index, row in table[["W", "H"]].iterrows():
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, row["W"])
@@ -187,7 +186,7 @@ def writeLinestoCSV(startPointList, endPointList, distanceList):
 if __name__ == "__main__":
 
     cap = cv2.VideoCapture(0)
-    # get_max_webcam_resolution(cap)
+    get_max_webcam_resolution(cap)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     while True:
