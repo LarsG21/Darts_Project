@@ -209,7 +209,7 @@ else:
     cv2.waitKey(1)
 
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FPS, 30)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -258,7 +258,7 @@ while True:
         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
         cv2.putText(img_undist, "Press q to take choose an image shown in 'Default' as default", (5, 20), cv2.FONT_HERSHEY_COMPLEX, 0.45, (0, 0, 255))
         cv2.imshow("Preview",img_undist)
-        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size)
+        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size,use_outer_corners=True)
         if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
             default_img = img_roi
             print("Set default image")
@@ -279,7 +279,7 @@ while True:
         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
         cv2.imshow("Undist", img_undist)
 
-        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size)
+        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size,use_outer_corners=True)
 
         if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
 
@@ -297,10 +297,44 @@ while True:
                 if 200000 / 4 < cnt[1] < 1000000 / 4:
                     radius_1, radius_2, radius_3, x_offset, y_offset = gui.update_dart_trackbars()
 
+                    #vx, vy, x, y = cv2.fitLine(cnt[1],cv2.DIST_L2,0,0.01,0.01)
+                    #left_point = int((-x * vy / vx) + y)
                     difference = cv2.absdiff(img_roi, default_img)
-                    blur = cv2.GaussianBlur(difference, (5, 5), 0)
+                    blur = cv2.GaussianBlur(difference, (5, 5),0)
+                    for i in range(radius_2):
+                        blur = cv2.GaussianBlur(blur, (9, 9), 1)
                     blur = cv2.bilateralFilter(blur, 9, 75, 75)
-                    ret, thresh = cv2.threshold(blur, 60, 255, 0)
+                    ret, thresh = cv2.threshold(blur, radius_1, 255, 0)
+                    gray = cv2.cvtColor(thresh,cv2.COLOR_BGR2GRAY)
+                    contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    minArea = 100
+                    for i in contours:
+                        area = cv2.contourArea(i)
+                        if area > minArea:
+                            points_list = i.reshape(i.shape[0],i.shape[2])
+                            triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
+                            triangle_np_array = cv2.UMat.get(triangle[1])
+                            pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
+
+                            # find tip of dart
+                            dart_point = pt1
+                            dist_1_2 = np.linalg.norm(pt1-pt2)
+                            dist_1_3 = np.linalg.norm(pt1-pt3)
+                            dist_2_3 = np.linalg.norm(pt2-pt3)
+                            if dist_1_2 > dist_1_3 and dist_2_3 > dist_1_3:
+                                dart_point = pt2
+                            elif dist_1_3 > dist_1_2 and dist_2_3 > dist_1_2:
+                                dart_point = pt3
+
+                            cv2.circle(thresh, dart_point.ravel(), 16, (0,0,255), -1)
+                            cv2.circle(img_roi, dart_point.ravel(), 16, (0,0,255), -1)
+
+
+                            pt1_new = pt1.ravel()
+                            cv2.line(thresh, pt1.ravel(), pt2.ravel(), (255, 0, 255), 2)
+                            cv2.line(thresh, pt2.ravel(), pt3.ravel(), (255, 0, 255), 2)
+                            cv2.line(thresh, pt3.ravel(), pt1.ravel(), (255, 0, 255), 2)
+
                     cv2.imshow("Threshold",thresh)
                     x = 3000
                     #if cv2.countNonZero(thresh) > x and cv2.countNonZero(thresh) < 15000:  ## threshold important -> make accessible
@@ -341,4 +375,9 @@ while True:
             fps, img_roi = fpsReader.update(img_roi)
             cv2.imshow("Dart Settings", rez(img_roi, 2))
             cv2.imshow("Diff", difference)
+        else:
+            print("NO MARKERS FOUND!")
+            cv2.putText(img_undist,"NO MARKERS FOUND",(300,300),cv2.FONT_HERSHEY_COMPLEX,3,(255,0,255),3)
+            cv2.imshow("Dart Settings", img_undist)
+
         cv2.waitKey(1)
