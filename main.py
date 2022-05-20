@@ -29,7 +29,8 @@ rows = 6  # 17   6
 columns = 9  # 28    9
 squareSize = 30  # mm
 calibrationRuns = 1
-
+CAMERA_NUMBER = 1   #0,1 is builtin 2 is external webcam
+TRIANGLE_DETECT_THRES = 32
 # #############  Config  #####################
 
 points = []
@@ -37,29 +38,7 @@ intersectp = []
 ellipse_vertices = []
 newpoints = []
 intersectp_s = []
-
-# ####### Score - Test ###########
-# score = DartScore.Score(501,True)
-# points = score.calculatePoints(17,1,20,2,0,1)
-# score.pointsScored(points[0], points[1])
-# print(score.currentScore)
-
-# points = score.calculatePoints(20,3,20,3,20,3)
-# score.pointsScored(points[0], points[1])
-# print(score.currentScore)
-
-# points = score.calculatePoints(20,3,20,3,20,3)
-# score.pointsScored(points[0], points[1])
-# print(score.currentScore)
-
-# points = score.calculatePoints(19,3,2,3,1,3)
-# score.pointsScored(points[0], points[1])
-# print(score.currentScore)
-
-# points = score.calculatePoints(0,1,0,2,9,2)
-# score.pointsScored(points[0], points[1])
-# print(score.currentScore)
-#############################################
+dart_point = None
 
 
 # OpenCV Window GUI###############################
@@ -81,7 +60,7 @@ elif keyEvent == ord('q'):
 else:
     cv2.waitKey(1)
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(CAMERA_NUMBER)
 cap.set(cv2.CAP_PROP_FPS, 30)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -109,10 +88,12 @@ if saveParametersPickle:
     print("Parameters Saved")
 
 if loadSavedParameters:
-    pickle_in_MTX = open("PickleFiles/mtx.pickle", "rb")
+    #pickle_in_MTX = open("PickleFiles/mtx.pickle", "rb")
+    pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
     meanMTX = pickle.load(pickle_in_MTX)
     print(meanMTX)
-    pickle_in_DIST = open("PickleFiles/dist.pickle", "rb")
+    #pickle_in_DIST = open("PickleFiles/dist.pickle", "rb")
+    pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
     meanDIST = pickle.load(pickle_in_DIST)
     print(meanDIST)
     print("Parameters Loaded")
@@ -147,11 +128,13 @@ while True:
             cv2.destroyWindow("Default")
             break
 
+#cv2.destroyWindow("General Settings")
+#cv2.destroyWindow("Edge Detection Settings")
+
 while True:
     fpsReader = FPS()
     succsess, img = cap.read()
     if succsess:
-        print(img.shape)
         # cv2.imshow("Originaimg",img)
         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
         cv2.imshow("Undist", img_undist)
@@ -160,7 +143,7 @@ while True:
 
         if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
 
-            cannyLow, cannyHigh, noGauss, minArea, errosions, dialations, epsilon, showFilters, automaticMode, textSize = gui.updateTrackBar()
+            cannyLow, cannyHigh, noGauss, minArea, errosions, dialations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
             imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
                                                                         gaussFilters=noGauss, minArea=minArea,
@@ -171,17 +154,37 @@ while True:
             cv2.imshow("Contours", imgContours)
 
             for cnt in contours:
+
                 if 200000 / 4 < cnt[1] < 1000000 / 4:
-                    radius_1, radius_2, radius_3, x_offset, y_offset = gui.update_dart_trackbars()
+                    radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
+
+                    # Create the outer most Circle
+                    ellipse = cv2.fitEllipse(cnt[4])
+                    x, y = ellipse[0]
+                    a, b = ellipse[1]
+                    angle = ellipse[2]
+                    center_ellipse = (int(x + x_offset / 10), int(y + y_offset / 10))
+                    a = a / 2
+                    b = b / 2
+
+                    # Create Radien in pixels
+                    dart_scorer_util.bullsLimit = a * (radius_1 / 100)
+                    dart_scorer_util.singleBullsLimit = a * (radius_2 / 100)
+                    dart_scorer_util.innerTripleLimit = a * (radius_3 / 100)
+                    dart_scorer_util.outerTripleLimit = a * (radius_4 / 100)
+                    dart_scorer_util.innerDoubleLimit = a * (radius_5 / 100)
+                    dart_scorer_util.outerBoardLimit = a * (radius_6 / 100)
+
+
 
                     # vx, vy, x, y = cv2.fitLine(cnt[1],cv2.DIST_L2,0,0.01,0.01)
                     # left_point = int((-x * vy / vx) + y)
                     difference = cv2.absdiff(img_roi, default_img)
                     blur = cv2.GaussianBlur(difference, (5, 5), 0)
-                    for i in range(radius_2):
+                    for i in range(10):
                         blur = cv2.GaussianBlur(blur, (9, 9), 1)
                     blur = cv2.bilateralFilter(blur, 9, 75, 75)
-                    ret, thresh = cv2.threshold(blur, radius_1, 255, 0)
+                    ret, thresh = cv2.threshold(blur, TRIANGLE_DETECT_THRES, 255, 0)
                     imgs = []
                     imgs.insert(0, thresh)
                     nr_imgs = 20
@@ -213,36 +216,53 @@ while True:
                             elif dist_1_3 > dist_1_2 and dist_2_3 > dist_1_2:
                                 dart_point = pt3
 
-                            cv2.circle(thresh, dart_point.ravel(), 16, (0, 0, 255), -1)
-                            cv2.circle(img_roi, dart_point.ravel(), 16, (0, 0, 255), -1)
+
+                            dart_point = dart_point.ravel()
+                            ########################
+                            radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
+                            print(radius, angle)
+                            value, mult = dart_scorer_util.evaluateThrow(radius, angle)
+                            print("First guess: ", value, mult)
+                            bottom_point = dart_scorer_util.getBottomPoint(pt2.ravel(), pt3, dart_point)
+                            cv2.line(img_roi, dart_point, bottom_point, (0, 0, 255), 8)
+
+                            k = 0.8  # scaling factor
+                            new_dart_point = k * abs(dart_point - bottom_point)
+                            cv2.circle(img_roi, new_dart_point, 10, (0, 0, 255), -1)
+                            print("Second guess: " + dart_scorer_util.evaluateThrow(
+                                dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1],
+                                                                   new_dart_point[0], new_dart_point[1])))
+                            #######################
+
+                            cv2.circle(thresh, dart_point, 16, (0, 0, 255), -1)
+                            cv2.circle(img_roi, dart_point, 16, (0, 0, 255), -1)
 
                             pt1_new = pt1.ravel()
                             cv2.line(thresh, pt1.ravel(), pt2.ravel(), (255, 0, 255), 2)
                             cv2.line(thresh, pt2.ravel(), pt3.ravel(), (255, 0, 255), 2)
                             cv2.line(thresh, pt3.ravel(), pt1.ravel(), (255, 0, 255), 2)
 
+
                     cv2.imshow("Threshold", out)
                     x = 3000
                     # if cv2.countNonZero(thresh) > x and cv2.countNonZero(thresh) < 15000:  ## threshold important -> make accessible
 
-                    ellipse = cv2.fitEllipse(cnt[4])
-                    cv2.ellipse(img_roi, ellipse, (0, 255, 0), 5)
 
-                    x, y = ellipse[0]
-                    a, b = ellipse[1]
-                    angle = ellipse[2]
-
-                    center_ellipse = (int(x + x_offset / 10), int(y + y_offset / 10))
-
-                    a = a / 2
-                    b = b / 2
 
                     previos_img = img_roi
                     # TODO: Seperate show image and processing image with cv2.copy
                     cv2.ellipse(img_roi, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
-                    cv2.circle(img_roi, center_ellipse, int(a * (radius_1 / 100)), (255, 0, 255), 2)
-                    cv2.circle(img_roi, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 2)
-                    cv2.circle(img_roi, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 2)
+                    cv2.circle(img_roi, center_ellipse, int(a * (radius_1 / 100)), (255, 0, 255), 1)
+                    cv2.circle(img_roi, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 1)
+                    cv2.circle(img_roi, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 1)
+                    cv2.circle(img_roi, center_ellipse, int(a * (radius_4 / 100)), (255, 0, 255), 1)
+                    cv2.circle(img_roi, center_ellipse, int(a * (radius_5 / 100)), (255, 0, 255), 1)
+                    cv2.circle(img_roi, center_ellipse, int(a * (radius_6 / 100)), (255, 0, 255), 1)
+
+                    cv2.ellipse(img_roi, ellipse, (0, 255, 0), 5)
+                    if dart_point is not None:
+                        cv2.line(img_roi, center_ellipse, dart_point, (255,0,0),2)
+
 
                     # cv2.circle(image_proc_img, (int(x), int(y-b/2)), 3, cv.CV_RGB(0, 255, 0), 2, 8)
 

@@ -24,10 +24,13 @@ def update_dart_trackbars():
     radius_1 = cv2.getTrackbarPos("Circle1", "Dart Settings")
     radius_2 = cv2.getTrackbarPos("Circle2", "Dart Settings")
     radius_3 = cv2.getTrackbarPos("Circle3", "Dart Settings")
+    radius_4 = cv2.getTrackbarPos("Circle4", "Dart Settings")
+    radius_5 = cv2.getTrackbarPos("Circle5", "Dart Settings")
+    radius_6 = cv2.getTrackbarPos("Circle6", "Dart Settings")
     x_offset = cv2.getTrackbarPos("X_Offset", "Dart Settings")
     y_offset = cv2.getTrackbarPos("Y_Offset", "Dart Settings")
 
-    return radius_1, radius_2, radius_3, x_offset, y_offset
+    return radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset
 
 
 def resetTrackBar():
@@ -69,13 +72,15 @@ def create_gui():
     cv2.createTrackbar("Erosions", "Edge Detection Settings", 1, 10, empty)
     cv2.createTrackbar("minArea", "Edge Detection Settings", 800, 500000, empty)
     cv2.createTrackbar("Epsilon", "Edge Detection Settings", 5, 40, empty)
-    cv2.createTrackbar("Show Filters", "General Settings", 1, 1, empty)
+    cv2.createTrackbar("Show Filters", "General Settings", 0, 1, empty)
     cv2.createTrackbar("Automatic", "General Settings", 0, 1, empty)
-    cv2.createTrackbar("TextSize", "General Settings", 100, 400, empty)
-    cv2.createTrackbar("Circle1", "Dart Settings", 100, 100, empty)
-    cv2.createTrackbar("Circle2", "Dart Settings", 100, 100, empty)
-    cv2.createTrackbar("Circle3", "Dart Settings", 100, 100, empty)
-    cv2.createTrackbar("Circle3", "Dart Settings", 100, 100, empty)
+    cv2.createTrackbar("TextSize", "General Settings", 32, 100, empty)
+    cv2.createTrackbar("Circle1", "Dart Settings", 4, 100, empty)
+    cv2.createTrackbar("Circle2", "Dart Settings", 8, 100, empty)
+    cv2.createTrackbar("Circle3", "Dart Settings", 45, 100, empty)
+    cv2.createTrackbar("Circle4", "Dart Settings", 50, 100, empty)
+    cv2.createTrackbar("Circle5", "Dart Settings", 73, 100, empty)
+    cv2.createTrackbar("Circle6", "Dart Settings", 79, 100, empty)
     cv2.createTrackbar("X_Offset", "Dart Settings", 0, 100, empty)
     cv2.setTrackbarMin("X_Offset", "Dart Settings", -100)
     cv2.createTrackbar("Y_Offset", "Dart Settings", 0, 100, empty)

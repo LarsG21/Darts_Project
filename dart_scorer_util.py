@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 
 def getRadiusAndAngle(centerX, centerY, pointX, pointY):
     """
@@ -9,7 +11,17 @@ def getRadiusAndAngle(centerX, centerY, pointX, pointY):
     angle = 0.0
     if (centerX >= 0) and (centerY >= 0) and (pointX >= 0) and (pointY >= 0):
         radius = math.sqrt((pointX - centerX) ** 2 + (pointY - centerY) ** 2)
-        angle = math.asin((pointY - centerY) / radius)
+        #radius = np.linalg.norm(((centerX,centerY),(pointX,pointY)))
+        if pointY < centerY:
+            if pointX < centerX:
+                angle = math.asin(abs(pointY - centerY) / radius) + np.pi/2
+            else:
+                angle = math.asin(abs(pointY - centerY) / radius)
+        else:
+            if pointX > centerX:
+                angle = math.asin(abs(pointY - centerY) / radius) + np.pi + np.pi/2
+            else:
+                angle = math.asin(abs(pointY - centerY) / radius) + np.pi
         angle = angle * (180 / math.pi)  # convert radiant to degrees
     return radius, angle
 
@@ -56,6 +68,7 @@ def evaluateThrow(radius, angle):
     """
     value = -1  # -1 is error state
     multiplier = 1
+    print(bullsLimit, outerBoardLimit)
 
     if radius >= 0.0:
         if radius < outerBoardLimit:
@@ -84,6 +97,16 @@ def evaluateThrow(radius, angle):
         print("Please throw again!")
 
     return value, multiplier
+
+
+def getBottomPoint(pt1, pt2, dart_point):
+    dx = pt2[0] - pt1[0]
+    dy = pt2[1] - pt1[1]
+    d12 = dx ** 2 + dy ** 2
+    u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
+    x = pt1[0] + u * dx
+    y = pt1[1] + u * dy
+    return x, y
 
 
 if __name__ == "__main__":
