@@ -215,3 +215,7 @@ def intersectLineCircle(center, radius, p1, p2):
 
     pint2 = p1[0] - baX * abScalingFactor2, p1[1] - baY * abScalingFactor2
     return True, pint1, True, pint2
+
+
+
+

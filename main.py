@@ -29,7 +29,7 @@ rows = 6  # 17   6
 columns = 9  # 28    9
 squareSize = 30  # mm
 calibrationRuns = 1
-CAMERA_NUMBER = 1   #0,1 is builtin 2 is external webcam
+CAMERA_NUMBER = 0   #0,1 is builtin 2 is external webcam
 TRIANGLE_DETECT_THRES = 32
 # #############  Config  #####################
 
@@ -88,12 +88,12 @@ if saveParametersPickle:
     print("Parameters Saved")
 
 if loadSavedParameters:
-    #pickle_in_MTX = open("PickleFiles/mtx.pickle", "rb")
-    pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
+    pickle_in_MTX = open("PickleFiles/mtx.pickle", "rb")
+    # pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
     meanMTX = pickle.load(pickle_in_MTX)
     print(meanMTX)
-    #pickle_in_DIST = open("PickleFiles/dist.pickle", "rb")
-    pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
+    pickle_in_DIST = open("PickleFiles/dist.pickle", "rb")
+    # pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
     meanDIST = pickle.load(pickle_in_DIST)
     print(meanDIST)
     print("Parameters Loaded")
@@ -130,7 +130,7 @@ while True:
 
 #cv2.destroyWindow("General Settings")
 #cv2.destroyWindow("Edge Detection Settings")
-
+images_for_rolling_average = []
 while True:
     fpsReader = FPS()
     succsess, img = cap.read()
@@ -138,7 +138,6 @@ while True:
         # cv2.imshow("Originaimg",img)
         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
         cv2.imshow("Undist", img_undist)
-
         img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=True)
 
         if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
@@ -151,13 +150,13 @@ while True:
                                                                         errsoions=errosions, dialations=dialations,
                                                                         showFilters=showFilters)  # gets Contours from Image
 
+            radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
+            # Create Radien in pixels
             cv2.imshow("Contours", imgContours)
 
+
             for cnt in contours:
-
                 if 200000 / 4 < cnt[1] < 1000000 / 4:
-                    radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
-
                     # Create the outer most Circle
                     ellipse = cv2.fitEllipse(cnt[4])
                     x, y = ellipse[0]
@@ -167,7 +166,6 @@ while True:
                     a = a / 2
                     b = b / 2
 
-                    # Create Radien in pixels
                     dart_scorer_util.bullsLimit = a * (radius_1 / 100)
                     dart_scorer_util.singleBullsLimit = a * (radius_2 / 100)
                     dart_scorer_util.innerTripleLimit = a * (radius_3 / 100)
@@ -176,25 +174,30 @@ while True:
                     dart_scorer_util.outerBoardLimit = a * (radius_6 / 100)
 
 
-
-                    # vx, vy, x, y = cv2.fitLine(cnt[1],cv2.DIST_L2,0,0.01,0.01)
-                    # left_point = int((-x * vy / vx) + y)
+                    # get the differnce image
                     difference = cv2.absdiff(img_roi, default_img)
+                    # blur it for better edges
                     blur = cv2.GaussianBlur(difference, (5, 5), 0)
                     for i in range(10):
                         blur = cv2.GaussianBlur(blur, (9, 9), 1)
                     blur = cv2.bilateralFilter(blur, 9, 75, 75)
                     ret, thresh = cv2.threshold(blur, TRIANGLE_DETECT_THRES, 255, 0)
-                    imgs = []
-                    imgs.insert(0, thresh)
-                    nr_imgs = 20
-                    if len(imgs) > nr_imgs:
-                        out = imgs[0]
-                        for j in range(1, nr_imgs):
-                            out = cv2.add(img[j], out)
-                        imgs.pop()
-                    else:
-                        out = thresh
+                    if False:   #Use moving average
+                        images_for_rolling_average.append(thresh) #TODO THIS DOES NOT WORK CURRENTLY
+                        print("appended one img to que")
+                        nr_imgs = 10
+                        print(len(images_for_rolling_average))
+                        if len(images_for_rolling_average) > nr_imgs:
+                            out = images_for_rolling_average[-1]
+                            print("Created One Mean img")
+                            for j in range(nr_imgs-1, 0,-1):
+                                # out = cv2.add(images_for_rolling_average[j], out)
+                                out = cv2.addWeighted(images_for_rolling_average[j],0.5,out,0.5,1)
+                            images_for_rolling_average = images_for_rolling_average[1:20]
+                            print("Popped 1 img")
+                        else:
+                            out = thresh
+                    out = thresh
                     gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
                     contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                     minArea = 100
@@ -219,25 +222,25 @@ while True:
 
                             dart_point = dart_point.ravel()
                             ########################
-                            radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
-                            print(radius, angle)
-                            value, mult = dart_scorer_util.evaluateThrow(radius, angle)
-                            print("First guess: ", value, mult)
-                            bottom_point = dart_scorer_util.getBottomPoint(pt2.ravel(), pt3, dart_point)
-                            cv2.line(img_roi, dart_point, bottom_point, (0, 0, 255), 8)
+                            # radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
+                            # print(radius, angle)
+                            # value, mult = dart_scorer_util.evaluateThrow(radius, angle)
+                            # print("First guess: ", value, mult)
+                            # bottom_point = dart_scorer_util.getBottomPoint(pt2, pt3, dart_point)
+                            # cv2.line(img_roi, dart_point, bottom_point, (0, 0, 255), 8)
 
                             k = 0.8  # scaling factor
-                            new_dart_point = k * abs(dart_point - bottom_point)
-                            cv2.circle(img_roi, new_dart_point, 10, (0, 0, 255), -1)
-                            print("Second guess: " + dart_scorer_util.evaluateThrow(
-                                dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1],
-                                                                   new_dart_point[0], new_dart_point[1])))
+                            # new_dart_point = k * abs(dart_point - bottom_point)
+                            # cv2.circle(img_roi, new_dart_point, 10, (0, 0, 255), -1)
+                            # print("Second guess: " + dart_scorer_util.evaluateThrow(
+                            #     dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1],
+                            #                                        new_dart_point[0], new_dart_point[1])))
                             #######################
 
                             cv2.circle(thresh, dart_point, 16, (0, 0, 255), -1)
                             cv2.circle(img_roi, dart_point, 16, (0, 0, 255), -1)
 
-                            pt1_new = pt1.ravel()
+                            # Display the triangles
                             cv2.line(thresh, pt1.ravel(), pt2.ravel(), (255, 0, 255), 2)
                             cv2.line(thresh, pt2.ravel(), pt3.ravel(), (255, 0, 255), 2)
                             cv2.line(thresh, pt3.ravel(), pt1.ravel(), (255, 0, 255), 2)

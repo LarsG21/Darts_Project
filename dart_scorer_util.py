@@ -99,14 +99,17 @@ def evaluateThrow(radius, angle):
     return value, multiplier
 
 
-def getBottomPoint(pt1, pt2, dart_point):
-    dx = pt2[0] - pt1[0]
-    dy = pt2[1] - pt1[1]
-    d12 = dx ** 2 + dy ** 2
-    u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
-    x = pt1[0] + u * dx
-    y = pt1[1] + u * dy
-    return x, y
+def getBottomPoint(pt1:np.ndarray, pt2:np.ndarray, dart_point:np.ndarray):   # TODO: Input safety of this !
+    if pt1.shape == (1,2) and pt2.shape == (1,2):
+        pt1, pt2 = pt1.ravel(), pt2.ravel()
+    if pt1.shape == (2,) and pt2.shape == (2,):
+        dx = pt2[0] - pt1[0]
+        dy = pt2[1] - pt1[1]
+        d12 = dx ** 2 + dy ** 2
+        u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
+        x = pt1[0] + u * dx
+        y = pt1[1] + u * dy
+        return np.array([x,y]).astype(np.int32)
 
 
 if __name__ == "__main__":

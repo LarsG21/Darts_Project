@@ -183,6 +183,9 @@ def writeLinestoCSV(startPointList, endPointList, distanceList):
             spamwriter.writerow([point1, round(distance, 6), point2])
 
 
+
+
+
 if __name__ == "__main__":
 
     cap = cv2.VideoCapture(0)
