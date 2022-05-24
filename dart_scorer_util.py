@@ -14,12 +14,14 @@ def getRadiusAndAngle(centerX, centerY, pointX, pointY):
         #radius = np.linalg.norm(((centerX,centerY),(pointX,pointY)))
         if pointY < centerY:
             if pointX < centerX:
-                angle = math.asin(abs(pointY - centerY) / radius) + np.pi/2
+                angle = math.acos(abs(pointY - centerY) / radius) + np.pi/2
+                print("OL")
             else:
                 angle = math.asin(abs(pointY - centerY) / radius)
         else:
             if pointX > centerX:
-                angle = math.asin(abs(pointY - centerY) / radius) + np.pi + np.pi/2
+                angle = math.acos(abs(pointY - centerY) / radius) + np.pi + np.pi/2
+                print('UR')
             else:
                 angle = math.asin(abs(pointY - centerY) / radius) + np.pi
         angle = angle * (180 / math.pi)  # convert radiant to degrees
@@ -68,7 +70,7 @@ def evaluateThrow(radius, angle):
     """
     value = -1  # -1 is error state
     multiplier = 1
-    print(bullsLimit, outerBoardLimit)
+    # print(bullsLimit, outerBoardLimit)
 
     if radius >= 0.0:
         if radius < outerBoardLimit:
