@@ -1,32 +1,13 @@
 import math
-
 import numpy as np
 
-
-def getRadiusAndAngle(centerX, centerY, pointX, pointY):
-    """
-    get the radius and the angle of the thrown point in relation to the board center
-    """
-    radius = -1.0  # indicates an error state
-    angle = 0.0
-    if (centerX >= 0) and (centerY >= 0) and (pointX >= 0) and (pointY >= 0):
-        radius = math.sqrt((pointX - centerX) ** 2 + (pointY - centerY) ** 2)
-        #radius = np.linalg.norm(((centerX,centerY),(pointX,pointY)))
-        if pointY < centerY:
-            if pointX < centerX:
-                angle = math.acos(abs(pointY - centerY) / radius) + np.pi/2
-                print("OL")
-            else:
-                angle = math.asin(abs(pointY - centerY) / radius)
-        else:
-            if pointX > centerX:
-                angle = math.acos(abs(pointY - centerY) / radius) + np.pi + np.pi/2
-                print('UR')
-            else:
-                angle = math.asin(abs(pointY - centerY) / radius) + np.pi
-        angle = angle * (180 / math.pi)  # convert radiant to degrees
-    return radius, angle
-
+# radius limits for the different fields on the board
+bullsLimit = 10.0
+singleBullsLimit = 15.0  # example values
+innerTripleLimit = 50.0
+outerTripleLimit = 55.0
+innerDoubleLimit = 95.0
+outerBoardLimit = 100.0
 
 # dictionary that maps the angles to the corresponding fields on the dart board
 # every field has a range of 18° and the first field is split in half,
@@ -55,13 +36,30 @@ listOfFields = {
     (351.0001, 360.000): 6,
 }
 
-# radius limits for the different fields on the board
-bullsLimit = 10.0
-singleBullsLimit = 15.0  # example values
-innerTripleLimit = 50.0
-outerTripleLimit = 55.0
-innerDoubleLimit = 95.0
-outerBoardLimit = 100.0
+
+def getRadiusAndAngle(centerX, centerY, pointX, pointY):
+    """
+    get the radius and the angle of the thrown point in relation to the board center
+    """
+    radius = -1.0  # indicates an error state
+    angle = 0.0
+    if (centerX >= 0) and (centerY >= 0) and (pointX >= 0) and (pointY >= 0):
+        radius = math.sqrt((pointX - centerX) ** 2 + (pointY - centerY) ** 2)
+
+        if pointY < centerY:
+            if pointX < centerX:
+                angle = math.acos(abs(pointY - centerY) / radius) + np.pi/2
+                print("OL")
+            else:
+                angle = math.asin(abs(pointY - centerY) / radius)
+        else:
+            if pointX > centerX:
+                angle = math.acos(abs(pointY - centerY) / radius) + np.pi + np.pi/2
+                print('UR')
+            else:
+                angle = math.asin(abs(pointY - centerY) / radius) + np.pi
+        angle = angle * (180 / math.pi)  # convert radiant to degrees
+    return radius, angle
 
 
 def evaluateThrow(radius, angle):
@@ -101,8 +99,12 @@ def evaluateThrow(radius, angle):
     return value, multiplier
 
 
-def getBottomPoint(pt1:np.ndarray, pt2:np.ndarray, dart_point:np.ndarray):   # TODO: Input safety of this !
-    if pt1.shape == (1,2) and pt2.shape == (1,2):
+def getBottomPoint(pt1: np.ndarray, pt2: np.ndarray, dart_point: np.ndarray):
+    """
+    finds the point on a triangle of given points, where the line from one corner of the triangle to the hypotenuse
+    is orthogonal to the hypotenuse
+    """
+    if pt1.shape == (1, 2) and pt2.shape == (1, 2):
         pt1, pt2 = pt1.ravel(), pt2.ravel()
     if pt1.shape == (2,) and pt2.shape == (2,):
         dx = pt2[0] - pt1[0]
@@ -111,10 +113,16 @@ def getBottomPoint(pt1:np.ndarray, pt2:np.ndarray, dart_point:np.ndarray):   # T
         u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
         x = pt1[0] + u * dx
         y = pt1[1] + u * dy
-        return np.array([x,y]).astype(np.int32)
+        return np.array([x, y]).astype(np.int32)
+    else:
+        print("Points have the wrong shape! Cannot find bottom Point.")
 
 
-if __name__ == "__main__":
-    (radius, angle) = getRadiusAndAngle(0, 0, 54, 10)
-    print(radius, angle)
-    print(evaluateThrow(radius, angle))
+# def getBottomPoint(pt1,pt2,dart_point):
+#    dx = pt2[0]-pt1[0]
+#    dy = pt2[1]-pt1[1]
+#    d12 = dx**2 + dy**2
+#    u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
+#    x = pt1[0] + u * dx
+#    y = pt1[1] + u * dy
+#    return x, y
