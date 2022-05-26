@@ -4,20 +4,20 @@ import cv2
 def updateTrackBar():
     """
     updates the trackbars
-    :return:
+    :return: the trackbar positions
     """
     cannyLow = cv2.getTrackbarPos("Edge Thresh Low", "Edge Detection Settings")
     cannyHigh = cv2.getTrackbarPos("Edge Thresh High", "Edge Detection Settings")
     noGauss = cv2.getTrackbarPos("Gaussian's", "Edge Detection Settings")
-    dialations = cv2.getTrackbarPos("Dilations","Edge Detection Settings")
-    errosions = cv2.getTrackbarPos("Erosions", "Edge Detection Settings")
+    dilations = cv2.getTrackbarPos("Dilations","Edge Detection Settings")
+    erosions = cv2.getTrackbarPos("Erosions", "Edge Detection Settings")
     minArea = cv2.getTrackbarPos("minArea", "Edge Detection Settings")
     epsilon = (cv2.getTrackbarPos("Epsilon", "Edge Detection Settings")) / 1000
     showFilters = bool(cv2.getTrackbarPos("Show Filters", "General Settings"))
     automatic = bool(cv2.getTrackbarPos("Automatic", "General Settings"))
-    textsize = cv2.getTrackbarPos("TextSize", "General Settings")/100
+    textsize = cv2.getTrackbarPos("TextSize", "General Settings") / 100
 
-    return cannyLow, cannyHigh, noGauss, minArea, errosions, dialations, epsilon, showFilters, automatic, textsize
+    return cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automatic, textsize
 
 
 def update_dart_trackbars():
@@ -36,7 +36,6 @@ def update_dart_trackbars():
 def resetTrackBar():
     """
     resets trackbars to default values
-    :return:
     """
     cv2.setTrackbarPos("Edge Thresh Low", "Edge Detection Settings", 120)
     cv2.setTrackbarPos("Edge Thresh High", "Edge Detection Settings", 160)
@@ -75,12 +74,6 @@ def create_gui():
     cv2.createTrackbar("Show Filters", "General Settings", 0, 1, empty)
     cv2.createTrackbar("Automatic", "General Settings", 0, 1, empty)
     cv2.createTrackbar("TextSize", "General Settings", 32, 100, empty)
-    #cv2.createTrackbar("Circle1", "Dart Settings", 4, 100, empty)
-    #cv2.createTrackbar("Circle2", "Dart Settings", 8, 100, empty)
-    #cv2.createTrackbar("Circle3", "Dart Settings", 45, 100, empty)
-    #cv2.createTrackbar("Circle4", "Dart Settings", 50, 100, empty)
-    #cv2.createTrackbar("Circle5", "Dart Settings", 73, 100, empty)
-    #cv2.createTrackbar("Circle6", "Dart Settings", 79, 100, empty)
     cv2.createTrackbar("Circle1", "Dart Settings", 4, 100, empty)
     cv2.createTrackbar("Circle2", "Dart Settings", 8, 100, empty)
     cv2.createTrackbar("Circle3", "Dart Settings", 45, 100, empty)
