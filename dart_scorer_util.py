@@ -36,6 +36,23 @@ listOfFields = {
     (351.0001, 360.000): 6,
 }
 
+def findTipOfDart(pt1, pt2, pt3):
+    dart_point = pt1
+    rest_pts = [pt2, pt3]
+    dist_1_2 = np.linalg.norm(pt1 - pt2)
+    dist_1_3 = np.linalg.norm(pt1 - pt3)
+    dist_2_3 = np.linalg.norm(pt2 - pt3)
+
+    if dist_1_2 > dist_1_3 and dist_2_3 > dist_1_3:
+        dart_point = pt2
+        rest_pts = [pt1, pt3]
+    elif dist_1_3 > dist_1_2 and dist_2_3 > dist_1_2:
+        dart_point = pt3
+        rest_pts = [pt1, pt2]
+
+    dart_point = dart_point.ravel()
+    return dart_point, rest_pts
+
 
 def getRadiusAndAngle(centerX, centerY, pointX, pointY):
     """

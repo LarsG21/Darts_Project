@@ -14,7 +14,7 @@ def midpoint(ptA, ptB):
     return (ptA[0, 0] + ptB[0, 0]) * 0.5, (ptA[0, 1] + ptB[0, 1]) * 0.5
 
 
-def get_contours(img, shapeROI = (0, 0), cThr=[100, 150], gaussFilters = 1, dialations = 6, errsoions = 2, showFilters=False, minArea=100, epsilon=0.01, Cornerfilter=0, draw=False):
+def get_contours(img, shapeROI = (0, 0), cThr=[100, 150], gaussFilters = 1, dilations = 6, erosions = 2, showFilters=False, minArea=100, epsilon=0.01, Cornerfilter=0, draw=False):
     """
     gets Contours from an image
 
@@ -38,8 +38,8 @@ def get_contours(img, shapeROI = (0, 0), cThr=[100, 150], gaussFilters = 1, dial
         cv2.imshow("Gauss", cv2.resize(imgGray, (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
     imgCanny = cv2.Canny(imgGray, cThr[0], cThr[1])
     kernel = np.ones((3, 3))
-    imgDial = cv2.dilate(imgCanny, kernel, iterations=dialations)
-    imgThre = cv2.erode(imgDial, kernel, iterations=errsoions)
+    imgDial = cv2.dilate(imgCanny, kernel, iterations=dilations)
+    imgThre = cv2.erode(imgDial, kernel, iterations=erosions)
     if showFilters:
         cv2.imshow('Canny', cv2.resize(imgThre, (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
     contours, hiearchy = cv2.findContours(imgThre, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
