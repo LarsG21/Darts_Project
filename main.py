@@ -34,7 +34,7 @@ rows = 6  # 17   6
 columns = 9  # 28    9
 squareSize = 30  # mm
 calibrationRuns = 1
-CAMERA_NUMBER = 1   # 0,1 is built-in, 2 is external webcam
+CAMERA_NUMBER = 0   # 0,1 is built-in, 2 is external webcam
 TRIANGLE_DETECT_THRESH = 24
 useMovingAverage = False
 
@@ -128,6 +128,7 @@ while True:
 # cv2.destroyWindow("Edge Detection Settings")
 
 images_for_rolling_average = []
+ellipse = None
 while True:
     fpsReader = FPS()
     success, img = cap.read()
@@ -153,13 +154,14 @@ while True:
             for cnt in contours:
                 if 200000 / 4 < cnt[1] < 1000000 / 4:
                     # Create the outermost Circle
-                    ellipse = cv2.fitEllipse(cnt[4])
-                    x, y = ellipse[0]
-                    a, b = ellipse[1]
-                    angle = ellipse[2]
-                    center_ellipse = (int(x + x_offset / 10), int(y + y_offset / 10))
-                    a = a / 2
-                    b = b / 2
+                    if ellipse is None:     # Save the outer most ellipse for later to avoid useless re calculation !
+                        ellipse = cv2.fitEllipse(cnt[4])    # Also a benefit for stability of the outer ellipse --> not jumping from frame to frame
+                        x, y = ellipse[0]
+                        a, b = ellipse[1]
+                        angle = ellipse[2]
+                        center_ellipse = (int(x + x_offset / 10), int(y + y_offset / 10))
+                        a = a / 2
+                        b = b / 2
 
                     dart_scorer_util.bullsLimit = a * (radius_1 / 100)
                     dart_scorer_util.singleBullsLimit = a * (radius_2 / 100)
@@ -223,13 +225,13 @@ while True:
                             bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_point)
                             cv2.line(img_roi, dart_point, bottom_point, (0, 0, 255), 2)
 
-                            # k = -0.25  # scaling factor
-                            # vect = (dart_point - bottom_point)
-                            # new_dart_point = dart_point + k * vect
-                            # cv2.circle(img_roi, new_dart_point.astype(np.int32), 4, (0, 255, 0), -1)
-                            # new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_point[0], new_dart_point[1])
-                            # new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
-                            # print("Second guess: ", new_val, new_mult)
+                            k = -0.25  # scaling factor
+                            vect = (dart_point - bottom_point)
+                            new_dart_point = dart_point + k * vect
+                            cv2.circle(img_roi, new_dart_point.astype(np.int32), 4, (0, 255, 0), -1)
+                            new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_point[0], new_dart_point[1])
+                            new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
+                            print("Second guess: ", new_val, new_mult)
 
                     cv2.imshow("Threshold", out)
                     x = 3000
