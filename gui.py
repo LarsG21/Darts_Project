@@ -47,7 +47,7 @@ def resetTrackBar():
 
 
 def create_gui():
-    mainImage = cv2.imread("Recources/Main Frame.PNG")
+    mainImage = cv2.imread("Resources/Main Frame.PNG")
     root_wind = "Object measurement"
     cv2.namedWindow(root_wind)
     cv2.imshow(root_wind, mainImage)
