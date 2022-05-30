@@ -26,6 +26,7 @@ class Score:
         if self.doubleOut:
             if (self.currentScore - points) >= 2:
                 self.currentScore -= points
+                print(f"Current Score: {self.currentScore}")
             else:
                 if hitDouble:
                     if (self.currentScore - points) == 0:

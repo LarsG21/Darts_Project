@@ -66,13 +66,11 @@ def getRadiusAndAngle(centerX, centerY, pointX, pointY):
         if pointY < centerY:
             if pointX < centerX:
                 angle = math.acos(abs(pointY - centerY) / radius) + np.pi/2
-                print("OL")
             else:
                 angle = math.asin(abs(pointY - centerY) / radius)
         else:
             if pointX > centerX:
                 angle = math.acos(abs(pointY - centerY) / radius) + np.pi + np.pi/2
-                print('UR')
             else:
                 angle = math.asin(abs(pointY - centerY) / radius) + np.pi
         angle = angle * (180 / math.pi)  # convert radiant to degrees
@@ -133,6 +131,7 @@ def getBottomPoint(pt1: np.ndarray, pt2: np.ndarray, dart_point: np.ndarray):
         return np.array([x, y]).astype(np.int32)
     else:
         print("Points have the wrong shape! Cannot find bottom Point.")
+
 
 
 # def getBottomPoint(pt1,pt2,dart_point):

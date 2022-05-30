@@ -1,3 +1,6 @@
+from statistics import mode
+from time import sleep
+
 import numpy as np
 import cv2
 import cv2.aruco as aruco
@@ -26,7 +29,6 @@ dart_point = None
 
 # #############  Config  ####################
 saveImages = False
-# undistiortTestAfterCalib = False
 saveParametersPickle = False
 loadSavedParameters = True
 webcam = True
@@ -34,9 +36,16 @@ rows = 6  # 17   6
 columns = 9  # 28    9
 squareSize = 30  # mm
 calibrationRuns = 1
-CAMERA_NUMBER = 0  # 0,1 is built-in, 2 is external webcam
+CAMERA_NUMBER = 1  # 0,1 is built-in, 2 is external webcam
 TRIANGLE_DETECT_THRESH = 24
 useMovingAverage = False
+score1 = DartScore.Score(501, True)
+scored_values = []
+scored_mults = []
+
+values_of_round = []
+mults_of_round = []
+
 
 # OpenCV Window GUI###############################
 gui.create_gui()
@@ -63,11 +72,11 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 if loadSavedParameters:
-    pickle_in_MTX = open("PickleFiles/mtx.pickle", "rb")
+    pickle_in_MTX = open("PickleFiles/mtx_cheap_webcam_good_target.pickle", "rb")
     # pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
     meanMTX = pickle.load(pickle_in_MTX)
     print(meanMTX)
-    pickle_in_DIST = open("PickleFiles/dist.pickle", "rb")
+    pickle_in_DIST = open("PickleFiles/dist _cheap_webcam_good_target.pickle", "rb")
     # pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
     meanDIST = pickle.load(pickle_in_DIST)
     print(meanDIST)
@@ -102,23 +111,40 @@ difference = np.zeros(target_ROI_size).astype(np.uint8)
 
 default_img = np.zeros(target_ROI_size).astype(np.uint8)
 
+def reset_default_image():
+    global default_img
+
+    img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
+    if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
+        img_roi = cv2.resize(img_roi, resize_for_squish)
+        default_img = img_roi
+        print("Set new default image")
+
+def update_score():
+    points, hit_double = score1.calculatePoints(values_of_round[0], mults_of_round[0],
+                                                values_of_round[1], mults_of_round[1],
+                                                values_of_round[2], mults_of_round[2])
+    score1.pointsScored(points, hit_double)
+
 cv2.destroyWindow("Object measurement")
 
 # First While Loop to set the default reference img
+resize_for_squish = (555, 600)
 while True:
     success, img = cap.read()
     if success:
         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-        cv2.putText(img_undist, "Press q to take and choose an image shown in 'Default' as default", (5, 20),
+        cv2.putText(img_undist, "Press x to take and choose an image shown in 'Default' as default", (5, 20),
                     cv2.FONT_HERSHEY_COMPLEX, 0.45, (0, 0, 255))
         cv2.imshow("Preview", img_undist)
-        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=True)
+        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
         if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
+            img_roi = cv2.resize(img_roi, resize_for_squish)
             default_img = img_roi
             print("Set default image")
             cv2.imshow("Default", default_img)
             cv2.waitKey(1)
-        if cv2.waitKey(1) & 0xff == ord('q'):
+        if cv2.waitKey(1) & 0xff == ord('x'):
             cv2.destroyWindow("Preview")
             cv2.destroyWindow("Default")
             break
@@ -167,10 +193,9 @@ while True:
     if success:
         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
         # cv2.imshow("Undist", img_undist)
-        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=True)
-
+        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
         if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
-
+            img_roi = cv2.resize(img_roi, resize_for_squish)
             cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
             detect_dart_circle_and_set_limits()
@@ -199,18 +224,19 @@ while True:
                 out = thresh
 
             gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
-            cv2.imshow("GRAY", gray)
             contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            minArea = 800
 
+            minArea = 800
             for i in contours:
                 area = cv2.contourArea(i)
                 if area > minArea:
                     points_list = i.reshape(i.shape[0], i.shape[2])
                     triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
                     triangle_np_array = cv2.UMat.get(triangle[1])
-                    pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
-
+                    if triangle_np_array is not None:
+                        pt1, pt2, pt3 = triangle_np_array.astype(np.int32)  # TODO: ERROR
+                    else:
+                        pt1, pt2, pt3 = np.array([-1,-1]), np.array([-1,-1]), np.array([-1,-1])
                     # Display the triangles
                     cv2.line(thresh, pt1.ravel(), pt2.ravel(), (255, 0, 255), 2)
                     cv2.line(thresh, pt2.ravel(), pt3.ravel(), (255, 0, 255), 2)
@@ -224,26 +250,41 @@ while True:
 
                     radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
                     value, mult = dart_scorer_util.evaluateThrow(radius, angle)
-                    print("First guess: ", value, mult)
 
                     bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_point)
                     cv2.line(img_roi, dart_point, bottom_point, (0, 0, 255), 2)
 
-                    k = -0.25  # scaling factor
+                    k = -0.215  # scaling factor
                     vect = (dart_point - bottom_point)
                     new_dart_point = dart_point + k * vect
                     cv2.circle(img_roi, new_dart_point.astype(np.int32), 4, (0, 255, 0), -1)
                     new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_point[0], new_dart_point[1])
                     new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
-                    print("Second guess: ", new_val, new_mult)
+
+                    if len(scored_values) <= 20:
+                        scored_values.append(new_val)
+                        scored_mults.append(new_mult)
+                    else:
+                        final_val = mode(scored_values)
+                        final_mult = mode(scored_mults)
+                        values_of_round.append(final_val)
+                        mults_of_round.append(final_mult)
+                        reset_default_image()
+                        print(f"Final val {final_val}")
+                        print(f"Final mult {final_mult}")
+                        if len(values_of_round) == 3:
+                            update_score()
+                            values_of_round = []
+                            mults_of_round = []
+
+                        scored_values = []
+                        scored_mults = []
 
             cv2.imshow("Threshold", out)
-            x = 3000
-            # if cv2.countNonZero(thresh) > x and cv2.countNonZero(thresh) < 15000:  # threshold important -> make accessible
 
             previous_img = img_roi
             # TODO: Separate show image and processing image with cv2.copy
-            cv2.ellipse(img_roi, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
+            # cv2.ellipse(img_roi, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
             cv2.circle(img_roi, center_ellipse, int(a * (radius_1 / 100)), (255, 0, 255), 1)
             cv2.circle(img_roi, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 1)
             cv2.circle(img_roi, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 1)
@@ -251,27 +292,17 @@ while True:
             cv2.circle(img_roi, center_ellipse, int(a * (radius_5 / 100)), (255, 0, 255), 1)
             cv2.circle(img_roi, center_ellipse, int(a * (radius_6 / 100)), (255, 0, 255), 1)
 
-            cv2.ellipse(img_roi, ellipse, (0, 255, 0), 5)
+            cv2.ellipse(img_roi, ellipse, (0, 255, 0), 2)
             if dart_point is not None:
                 cv2.line(img_roi, center_ellipse, dart_point, (255, 0, 0), 2)
 
-            # vertex calculation
-            xb = b * math.cos(angle)
-            yb = b * math.sin(angle)
-
-            xa = a * math.sin(angle)
-            ya = a * math.cos(angle)
-
-            # rect = cv2.minAreaRect(cnt[4])
-            # box = cv2.boxPoints(rect)
-            # box = np.int0(box)
-            # cv2.drawContours(img_undist, [box], 0, (0, 0, 255), 2)
             fps, img_roi = fpsReader.update(img_roi)
-            cv2.imshow("Dart Settings", img_roi)
+            cv2.imshow("Dart Settings", rez(img_roi,1.5))
         else:
             print("NO MARKERS FOUND!")
             cv2.putText(img_undist, "NO MARKERS FOUND", (300, 300), cv2.FONT_HERSHEY_COMPLEX, 3, (255, 0, 255), 3)
             cv2.imshow("Dart Settings", img_undist)
+            sleep(1)
 
         cv2.waitKey(1)
         if cv2.waitKey(1) & 0xff == ord('q'):
