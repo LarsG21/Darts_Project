@@ -1,21 +1,15 @@
 from statistics import mode
 from time import sleep
 
-import numpy as np
-import cv2
-import cv2.aruco as aruco
-import os
-import math
 import pickle
 from FPS import FPS
 
 import CalibrationWithUncertainty
 import ContourUtils
+from dart_scorer_util import update_score
 from utils import rez
 import gui
-import utils
 from CalibrationWithUncertainty import *
-import queue
 
 import dart_scorer_util
 import DartScore
@@ -120,11 +114,6 @@ def reset_default_image():
         default_img = img_roi
         print("Set new default image")
 
-def update_score():
-    points, hit_double = score1.calculatePoints(values_of_round[0], mults_of_round[0],
-                                                values_of_round[1], mults_of_round[1],
-                                                values_of_round[2], mults_of_round[2])
-    score1.pointsScored(points, hit_double)
 
 cv2.destroyWindow("Object measurement")
 
@@ -248,6 +237,7 @@ while True:
                     cv2.circle(thresh, dart_point, 4, (0, 0, 255), -1)
                     cv2.circle(img_roi, dart_point, 4, (0, 0, 255), -1)
 
+
                     radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
                     value, mult = dart_scorer_util.evaluateThrow(radius, angle)
 
@@ -273,7 +263,7 @@ while True:
                         print(f"Final val {final_val}")
                         print(f"Final mult {final_mult}")
                         if len(values_of_round) == 3:
-                            update_score()
+                            update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
                             values_of_round = []
                             mults_of_round = []
 

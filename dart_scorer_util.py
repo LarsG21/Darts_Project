@@ -2,6 +2,8 @@ import math
 import numpy as np
 
 # radius limits for the different fields on the board
+import DartScore
+
 bullsLimit = 10.0
 singleBullsLimit = 15.0  # example values
 innerTripleLimit = 50.0
@@ -133,12 +135,15 @@ def getBottomPoint(pt1: np.ndarray, pt2: np.ndarray, dart_point: np.ndarray):
         print("Points have the wrong shape! Cannot find bottom Point.")
 
 
-
-# def getBottomPoint(pt1,pt2,dart_point):
-#    dx = pt2[0]-pt1[0]
-#    dy = pt2[1]-pt1[1]
-#    d12 = dx**2 + dy**2
-#    u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
-#    x = pt1[0] + u * dx
-#    y = pt1[1] + u * dy
-#    return x, y
+def update_score(dart_score: DartScore.Score, values_of_round, mults_of_round):
+    """
+    This function evaluates one dart round (3 hits) of a player
+    :param dart_score:
+    :param values_of_round:
+    :param mults_of_round:
+    :return:
+    """
+    points, hit_double = dart_score.calculatePoints(values_of_round[0], mults_of_round[0],
+                                                values_of_round[1], mults_of_round[1],
+                                                values_of_round[2], mults_of_round[2])
+    dart_score.pointsScored(points, hit_double)
