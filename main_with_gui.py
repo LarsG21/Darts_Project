@@ -1,5 +1,6 @@
 import pickle
 import sys
+from random import randint
 from statistics import mode
 from time import sleep
 
@@ -16,6 +17,7 @@ import dart_scorer_util
 import gui
 import utils
 from FPS import FPS
+from qt_ui_classes import DartPositionLabel
 from ui_dart_main_gui import Ui_DartScorer
 
 # Globals
@@ -120,6 +122,19 @@ class MainWindow(QMainWindow):
         # Buttons
         self.ui.set_default_img_button.clicked.connect(lambda: UIFunctions.set_default_image(self))
         self.ui.start_measuring_button.clicked.connect(lambda: UIFunctions.start_detection_and_scoring(self))
+
+        self.DartPositions = {}
+
+        #HIGHLIGHT: NEEDS TO CHANGE ONE LINE in ui_dart_main.py to work !
+        # self.ui.dart_board_image = DartPositionLabel(self.ui.Dart_Board_Bg)
+        # Changes Type of Label to DartPositionLabel to enable adding of Dart Positions
+
+        DartPositionId = randint(1, 10000)
+        self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
+        self.DartPositions[DartPositionId].addDartPositionRandomly()
+        DartPositionId = randint(1, 10000)
+        self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
+        self.DartPositions[DartPositionId].addDartPosition(300,100)
 
         self.show()
 

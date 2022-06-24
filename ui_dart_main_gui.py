@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dart_main_guimVdgSA.ui'
+## Form generated from reading UI file 'dart_main_guirAGnkr.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -11,6 +11,8 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+from qt_ui_classes import DartPositionLabel
 
 
 class Ui_DartScorer(object):
@@ -1255,6 +1257,13 @@ class Ui_DartScorer(object):
         self.stop_measuring_button = QPushButton(self.Dart_Board_Bg)
         self.stop_measuring_button.setObjectName(u"stop_measuring_button")
         self.stop_measuring_button.setGeometry(QRect(150, 30, 92, 23))
+        self.pushButton = QPushButton(self.Dart_Board_Bg)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setGeometry(QRect(660, 560, 92, 23))
+        self.dart_board_image = DartPositionLabel(self.Dart_Board_Bg)
+        self.dart_board_image.setObjectName(u"dart_board_image")
+        self.dart_board_image.setGeometry(QRect(120, 60, 501, 501))
+        self.dart_board_image.setPixmap(QPixmap(u"Resources/Anonymous_dartboard.svg"))
 
         self.horizontalLayout.addWidget(self.Dart_Board_Bg)
 
@@ -1282,5 +1291,7 @@ class Ui_DartScorer(object):
         self.set_default_img_button.setText(QCoreApplication.translate("DartScorer", u"Set Default", None))
         self.start_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Start Measuring", None))
         self.stop_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Stop Measuring", None))
+        self.pushButton.setText(QCoreApplication.translate("DartScorer", u"Undo last", None))
+        self.dart_board_image.setText("")
     # retranslateUi
 

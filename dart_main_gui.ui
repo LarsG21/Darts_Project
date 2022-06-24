@@ -1565,6 +1565,35 @@ QProgressBar::chunk
         <string>Stop Measuring</string>
        </property>
       </widget>
+      <widget class="QPushButton" name="pushButton">
+       <property name="geometry">
+        <rect>
+         <x>660</x>
+         <y>560</y>
+         <width>92</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Undo last</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="dart_board_image">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>60</y>
+         <width>501</width>
+         <height>501</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap>Resources/Anonymous_dartboard.svg</pixmap>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
