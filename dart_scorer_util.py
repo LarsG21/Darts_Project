@@ -146,4 +146,7 @@ def update_score(dart_score: DartScore.Score, values_of_round, mults_of_round):
     points, hit_double = dart_score.calculatePoints(values_of_round[0], mults_of_round[0],
                                                 values_of_round[1], mults_of_round[1],
                                                 values_of_round[2], mults_of_round[2])
-    dart_score.pointsScored(points, hit_double)
+    if points is None or hit_double is None:
+        print("Error: Cannot calculate points!")
+    else:
+        dart_score.pointsScored(points, hit_double)

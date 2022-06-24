@@ -184,6 +184,13 @@ def writeLinestoCSV(startPointList, endPointList, distanceList):
 
 
 
+def reset_default_image(img_undist, target_ROI_size, resize_for_squish):
+
+    img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
+    if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
+        img_roi = cv2.resize(img_roi, resize_for_squish)
+        print("Set new default image")
+        return img_roi
 
 
 if __name__ == "__main__":

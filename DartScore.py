@@ -62,5 +62,8 @@ class Score:
                     hitDouble = True
                 if (firstThrow == 50) or (secondThrow == 50) or (thirdThrow == 50):
                     hitDouble = True
-                return firstThrow * firstMultiplier + secondThrow * secondMultiplier + thirdThrow * thirdMultiplier, hitDouble
-        print("Invalid Throw! Could not calculate the points.")
+                if firstThrow * firstMultiplier + secondThrow * secondMultiplier + thirdThrow * thirdMultiplier is not None and hitDouble is not None:
+                    return firstThrow * firstMultiplier + secondThrow * secondMultiplier + thirdThrow * thirdMultiplier, hitDouble
+        else:
+            print("Invalid Throw! Could not calculate the points.")
+            return None, None

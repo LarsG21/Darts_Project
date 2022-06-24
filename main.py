@@ -7,19 +7,30 @@ from FPS import FPS
 import CalibrationWithUncertainty
 import ContourUtils
 from dart_scorer_util import update_score
-from utils import rez
+from utils import rez, reset_default_image
 import gui
 from CalibrationWithUncertainty import *
 
 import dart_scorer_util
 import DartScore
 
+
+# Globals
 points = []
 intersectp = []
 ellipse_vertices = []
 newpoints = []
 intersectp_s = []
 dart_point = None
+TRIANGLE_DETECT_THRESH = 24
+useMovingAverage = False
+score1 = DartScore.Score(501, True)
+scored_values = []
+scored_mults = []
+
+values_of_round = []
+mults_of_round = []
+
 
 # #############  Config  ####################
 saveImages = False
@@ -30,15 +41,7 @@ rows = 6  # 17   6
 columns = 9  # 28    9
 squareSize = 30  # mm
 calibrationRuns = 1
-CAMERA_NUMBER = 1  # 0,1 is built-in, 2 is external webcam
-TRIANGLE_DETECT_THRESH = 24
-useMovingAverage = False
-score1 = DartScore.Score(501, True)
-scored_values = []
-scored_mults = []
-
-values_of_round = []
-mults_of_round = []
+CAMERA_NUMBER = 0  # 0,1 is built-in, 2 is external webcam
 
 
 # OpenCV Window GUI###############################
@@ -103,40 +106,34 @@ target_ROI_size = (600, 600)
 previous_img = np.zeros((target_ROI_size[0], target_ROI_size[1], 3)).astype(np.uint8)
 difference = np.zeros(target_ROI_size).astype(np.uint8)
 
-default_img = np.zeros(target_ROI_size).astype(np.uint8)
-
-def reset_default_image():
-    global default_img
-
-    img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
-    if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
-        img_roi = cv2.resize(img_roi, resize_for_squish)
-        default_img = img_roi
-        print("Set new default image")
 
 
 cv2.destroyWindow("Object measurement")
 
 # First While Loop to set the default reference img
-resize_for_squish = (555, 600)
-while True:
-    success, img = cap.read()
-    if success:
-        img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-        cv2.putText(img_undist, "Press x to take and choose an image shown in 'Default' as default", (5, 20),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.45, (0, 0, 255))
-        cv2.imshow("Preview", img_undist)
-        img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
-        if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
-            img_roi = cv2.resize(img_roi, resize_for_squish)
-            default_img = img_roi
-            print("Set default image")
-            cv2.imshow("Default", default_img)
-            cv2.waitKey(1)
-        if cv2.waitKey(1) & 0xff == ord('x'):
-            cv2.destroyWindow("Preview")
-            cv2.destroyWindow("Default")
-            break
+resize_for_squish = (600, 600)
+def set_default_img(cap):
+    default_img_temp = np.zeros(target_ROI_size).astype(np.uint8)
+    while True:
+        success, img = cap.read()
+        if success:
+            img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+            cv2.putText(img_undist, "Press x to take and choose an image shown in 'Default' as default", (5, 20),
+                        cv2.FONT_HERSHEY_COMPLEX, 0.45, (0, 0, 255))
+            cv2.imshow("Preview", img_undist)
+            img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
+            if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
+                img_roi = cv2.resize(img_roi, resize_for_squish)
+                default_img_temp = img_roi
+                print("Set default image")
+                cv2.imshow("Default", default_img_temp)
+                cv2.waitKey(1)
+            if cv2.waitKey(1) & 0xff == ord('x'):
+                cv2.destroyWindow("Preview")
+                cv2.destroyWindow("Default")
+                return default_img_temp
+
+default_img = set_default_img(cap=cap)
 
 # cv2.destroyWindow("General Settings")
 # cv2.destroyWindow("Edge Detection Settings")
@@ -238,6 +235,7 @@ while True:
                     cv2.circle(img_roi, dart_point, 4, (0, 0, 255), -1)
 
 
+
                     radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
                     value, mult = dart_scorer_util.evaluateThrow(radius, angle)
 
@@ -259,7 +257,7 @@ while True:
                         final_mult = mode(scored_mults)
                         values_of_round.append(final_val)
                         mults_of_round.append(final_mult)
-                        reset_default_image()
+                        default_img = reset_default_image(img_undist, target_ROI_size, resize_for_squish)
                         print(f"Final val {final_val}")
                         print(f"Final mult {final_mult}")
                         if len(values_of_round) == 3:
