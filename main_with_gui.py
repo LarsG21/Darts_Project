@@ -47,6 +47,9 @@ scored_mults = []
 values_of_round = []
 mults_of_round = []
 
+new_dart_point = None
+update_dart_point = False
+
 images_for_rolling_average = []
 ellipse = None
 x_offset_current, y_offset_current = 0, 0
@@ -182,6 +185,7 @@ class DetectionAndScoring(QRunnable):
     def run(self):
         global previous_img, difference, default_img, ACTIVE_PLAYER
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
+        global new_dart_point, update_dart_point
         while True:
             fpsReader = FPS()
             success, img = cap.read()
@@ -252,6 +256,8 @@ class DetectionAndScoring(QRunnable):
                             k = -0.215  # scaling factor
                             vect = (dart_point - bottom_point)
                             new_dart_point = dart_point + k * vect
+                            update_dart_point = True
+
                             cv2.circle(img_roi, new_dart_point.astype(np.int32), 4, (0, 255, 0), -1)
                             new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_point[0], new_dart_point[1])
                             new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
@@ -312,6 +318,17 @@ class DetectionAndScoring(QRunnable):
 
 class UIFunctions(QMainWindow):
 
+    def delete_all_x_on_board(self):
+        for lable in self.DartPositions.values():
+            print("Test")
+            print("Deleting: " + lable.text())
+            lable.setText("")
+
+    def place_x_on_board(self, pos_x, pos_y):
+        DartPositionId = randint(1, 10000)
+        self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
+        self.DartPositions[DartPositionId].addDartPosition(pos_x, pos_y)
+
     def set_default_image(self):
         pool = QThreadPool.globalInstance()
         default_img_setter = DefaultImageSetter()
@@ -323,7 +340,11 @@ class UIFunctions(QMainWindow):
         pool.start(detection_and_scoring)
 
     def update_labels(self):
-        global values_of_round, mults_of_round, ACTIVE_PLAYER
+        global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_point, update_dart_point
+        if update_dart_point:
+            UIFunctions.place_x_on_board(self, new_dart_point[0], new_dart_point[1])
+            update_dart_point = False
+            print(f"New dart point !!!!!!!!!!!!!!!!!!!!!!!! {new_dart_point}")
         if ACTIVE_PLAYER == 1:
             self.ui.player1_sum_round.setText(str(sum(values_of_round)))
             if len(values_of_round) == 1:
@@ -335,6 +356,7 @@ class UIFunctions(QMainWindow):
                 self.ui.player1_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
                 self.ui.player1_2.setText(f"{values_of_round[1] * mults_of_round[1]}")
                 self.ui.player1_3.setText(f"{values_of_round[2] * mults_of_round[2]}")
+                UIFunctions.delete_all_x_on_board(self)
             else:
                 self.ui.player1_1.setText("-")
                 self.ui.player1_2.setText("-")
@@ -350,6 +372,7 @@ class UIFunctions(QMainWindow):
                 self.ui.player2_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
                 self.ui.player2_2.setText(f"{values_of_round[1] * mults_of_round[1]}")
                 self.ui.player2_3.setText(f"{values_of_round[2] * mults_of_round[2]}")
+                UIFunctions.delete_all_x_on_board(self)
             else:
                 self.ui.player2_1.setText("-")
                 self.ui.player2_2.setText("-")
@@ -367,6 +390,6 @@ if __name__ == "__main__":
     window = MainWindow()
     label_update_timer = QtCore.QTimer()
     label_update_timer.timeout.connect(lambda: UIFunctions.update_labels(window))
-    label_update_timer.start(100)  # every 100 milliseconds
+    label_update_timer.start(10)  # every 10 milliseconds
 
     sys.exit(app.exec_())

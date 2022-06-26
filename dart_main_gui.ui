@@ -1255,6 +1255,9 @@ QProgressBar::chunk
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <item>
               <widget class="QLabel" name="player1_overall">
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
                <property name="text">
                 <string>Overall</string>
                </property>
