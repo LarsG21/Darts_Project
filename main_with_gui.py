@@ -54,6 +54,10 @@ images_for_rolling_average = []
 ellipse = None
 x_offset_current, y_offset_current = 0, 0
 
+#############################################
+STOP_DETECTION = False
+dart_id = 0
+
 cap = cv2.VideoCapture(CAMERA_NUMBER)
 cap.set(cv2.CAP_PROP_FPS, 30)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
@@ -125,6 +129,8 @@ class MainWindow(QMainWindow):
         # Buttons
         self.ui.set_default_img_button.clicked.connect(lambda: UIFunctions.set_default_image(self))
         self.ui.start_measuring_button.clicked.connect(lambda: UIFunctions.start_detection_and_scoring(self))
+        self.ui.stop_measuring_button.clicked.connect(lambda: UIFunctions.stop_detection_and_scoring(self))
+        self.ui.undo_last_throw_button.clicked.connect(lambda: UIFunctions.undo_last_throw(self))
 
         self.DartPositions = {}
 
@@ -132,12 +138,12 @@ class MainWindow(QMainWindow):
         # self.ui.dart_board_image = DartPositionLabel(self.ui.Dart_Board_Bg)
         # Changes Type of Label to DartPositionLabel to enable adding of Dart Positions
 
-        DartPositionId = randint(1, 10000)
-        self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
-        self.DartPositions[DartPositionId].addDartPositionRandomly()
-        DartPositionId = randint(1, 10000)
-        self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
-        self.DartPositions[DartPositionId].addDartPosition(300,100)
+        # DartPositionId = randint(1, 10000)
+        # self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
+        # self.DartPositions[DartPositionId].addDartPositionRandomly()
+        # DartPositionId = randint(1, 10000)
+        # self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
+        # self.DartPositions[DartPositionId].addDartPosition(300,100)
 
         self.show()
 
@@ -187,6 +193,8 @@ class DetectionAndScoring(QRunnable):
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
         global new_dart_point, update_dart_point
         while True:
+            if STOP_DETECTION:
+                break
             fpsReader = FPS()
             success, img = cap.read()
             if success:
@@ -318,6 +326,13 @@ class DetectionAndScoring(QRunnable):
 
 class UIFunctions(QMainWindow):
 
+    def undo_last_throw(self):
+        global values_of_round, mults_of_round
+        if len(values_of_round) > 0:
+            values_of_round.pop()
+            mults_of_round.pop()
+            list(self.DartPositions.values())[-1].setText("")
+
     def delete_all_x_on_board(self):
         for lable in self.DartPositions.values():
             print("Test")
@@ -325,7 +340,9 @@ class UIFunctions(QMainWindow):
             lable.setText("")
 
     def place_x_on_board(self, pos_x, pos_y):
-        DartPositionId = randint(1, 10000)
+        global dart_id
+        DartPositionId = dart_id
+        dart_id = dart_id + 1
         self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
         self.DartPositions[DartPositionId].addDartPosition(pos_x, pos_y)
 
@@ -335,9 +352,15 @@ class UIFunctions(QMainWindow):
         pool.start(default_img_setter)
 
     def start_detection_and_scoring(self):
+        global STOP_DETECTION
+        STOP_DETECTION = False
         pool = QThreadPool.globalInstance()
         detection_and_scoring = DetectionAndScoring()
         pool.start(detection_and_scoring)
+
+    def stop_detection_and_scoring(self):
+        global STOP_DETECTION
+        STOP_DETECTION = True
 
     def update_labels(self):
         global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_point, update_dart_point

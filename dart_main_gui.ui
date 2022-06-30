@@ -1568,7 +1568,7 @@ QProgressBar::chunk
         <string>Stop Measuring</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="undo_last_throw_button">
        <property name="geometry">
         <rect>
          <x>660</x>
