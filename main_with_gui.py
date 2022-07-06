@@ -86,7 +86,7 @@ else:
 target_ROI_size = (600, 600)
 resize_for_squish = (540, 600)
 
-Scaling_factor_for_x_placing_in_gui = (501/resize_for_squish[0]*1.05, 501/resize_for_squish[1]*0.9)
+Scaling_factor_for_x_placing_in_gui = (501/resize_for_squish[0], 501/resize_for_squish[1])
 
 previous_img = np.zeros((target_ROI_size[0], target_ROI_size[1], 3)).astype(np.uint8)
 difference = np.zeros(target_ROI_size).astype(np.uint8)
@@ -298,7 +298,7 @@ class DetectionAndScoring(QRunnable):
                                 print(f"Final mult {final_mult}")
                                 # Continue if enter is pressed
                                 if len(values_of_round) == 3:
-                                    window.ui.press_enter_label.setText("    Press Enter to start next round   ")
+                                    window.ui.press_enter_label.setText("    1. Remove all Darts\n    2. Press Enter to start next round")
                                     if cv2.waitKey(0) & 0xFF == ord('\r'):
                                         UIFunctions.delete_all_x_on_board(window)
                                         window.ui.press_enter_label.setText("")
@@ -349,9 +349,27 @@ class UIFunctions(QMainWindow):
     def undo_last_throw(self):
         global values_of_round, mults_of_round
         if len(values_of_round) > 0:
-            values_of_round.pop()
-            mults_of_round.pop()
+            val = values_of_round.pop()
+            mult = mults_of_round.pop()
+            if ACTIVE_PLAYER == 1:
+                self.ui.player1_sum_round.setText(str(int(self.ui.player1_sum_round.text()) - val * mult))
+                if values_of_round == 1:
+                    self.ui.player1_1_label.setText("")
+                elif values_of_round == 2:
+                    self.ui.player1_2_label.setText("")
+                elif values_of_round == 3:
+                    self.ui.player1_3_label.setText("")
+            elif ACTIVE_PLAYER == 2:
+                self.ui.player2_sum_round.setText(str(int(self.ui.player2_sum_round.text()) - val * mult))
+                if values_of_round == 1:
+                    self.ui.player2_1_label.setText("")
+                elif values_of_round == 2:
+                    self.ui.player2_2_label.setText("")
+                elif values_of_round == 3:
+                    self.ui.player2_3_label.setText("")
+
             list(self.DartPositions.values())[-1].setText("")
+
 
     def delete_all_x_on_board(self):
         print("LEN:", len(self.DartPositions.values()))
