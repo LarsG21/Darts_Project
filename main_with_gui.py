@@ -1,5 +1,6 @@
 import pickle
 import sys
+import time
 from random import randint
 from statistics import mode
 from time import sleep
@@ -29,6 +30,7 @@ newpoints = []
 intersectp_s = []
 dart_point = None
 ACTIVE_PLAYER = 1
+UNDO_LAST_FLAG = False
 
 # #############  Config  ####################
 
@@ -90,6 +92,7 @@ Scaling_factor_for_x_placing_in_gui = (501/resize_for_squish[0], 501/resize_for_
 
 previous_img = np.zeros((target_ROI_size[0], target_ROI_size[1], 3)).astype(np.uint8)
 difference = np.zeros(target_ROI_size).astype(np.uint8)
+img_undist = np.zeros(target_ROI_size).astype(np.uint8)
 
 default_img = np.zeros(target_ROI_size).astype(np.uint8)
 
@@ -196,13 +199,16 @@ class DetectionAndScoring(QRunnable):
         self.ser.close()
 
     def __init__(self):
-        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
+        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, \
+            useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist
         super().__init__()
         gui.create_gui()
+        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         cv2.destroyWindow("Object measurement")
 
+
     def run(self):
-        global previous_img, difference, default_img, ACTIVE_PLAYER
+        global previous_img, difference, default_img, ACTIVE_PLAYER, UNDO_LAST_FLAG
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
         global new_dart_point, update_dart_point, TRIANGLE_DETECT_THRESH, minArea
         while True:
@@ -288,6 +294,8 @@ class DetectionAndScoring(QRunnable):
                                 scored_values.append(new_val)
                                 scored_mults.append(new_mult)
                             else:
+                                if UNDO_LAST_FLAG:
+                                    window.ui.press_enter_label.setText("")
                                 update_dart_point = True
                                 final_val = mode(scored_values) # Take the most frequent result and use that as the final result
                                 final_mult = mode(scored_mults)
@@ -299,18 +307,24 @@ class DetectionAndScoring(QRunnable):
                                 # Continue if enter is pressed
                                 if len(values_of_round) == 3:
                                     window.ui.press_enter_label.setText("    1. Remove all Darts\n    2. Press Enter to start next round")
+                                    UNDO_LAST_FLAG = False
                                     if cv2.waitKey(0) & 0xFF == ord('\r'):
-                                        UIFunctions.delete_all_x_on_board(window)
-                                        window.ui.press_enter_label.setText("")
-                                        if ACTIVE_PLAYER == 1:
-                                            dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                            ACTIVE_PLAYER = 2
-                                        elif ACTIVE_PLAYER == 2:
-                                            dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                            ACTIVE_PLAYER = 1
-                                        values_of_round = []
-                                        mults_of_round = []
+                                        if not UNDO_LAST_FLAG:
+                                            UIFunctions.delete_all_x_on_board(window)
+                                            window.ui.press_enter_label.setText("")
+                                            if ACTIVE_PLAYER == 1:
+                                                dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                                ACTIVE_PLAYER = 2
+                                            elif ACTIVE_PLAYER == 2:
+                                                dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                                ACTIVE_PLAYER = 1
+                                            values_of_round = []
+                                            mults_of_round = []
+                                        else:
+                                            UNDO_LAST_FLAG = False
 
+
+                                            # Reset the image
                                 scored_values = []
                                 scored_mults = []
 
@@ -347,7 +361,9 @@ class DetectionAndScoring(QRunnable):
 class UIFunctions(QMainWindow):
 
     def undo_last_throw(self):
-        global values_of_round, mults_of_round
+        global values_of_round, mults_of_round, UNDO_LAST_FLAG
+        UNDO_LAST_FLAG = True
+        self.ui.press_enter_label.setText("    Please throw again")
         if len(values_of_round) > 0:
             val = values_of_round.pop()
             mult = mults_of_round.pop()
@@ -393,10 +409,10 @@ class UIFunctions(QMainWindow):
         pool.start(default_img_setter)
 
     def start_detection_and_scoring(self):
-        global STOP_DETECTION
+        global STOP_DETECTION, default_img
         STOP_DETECTION = False
         pool = QThreadPool.globalInstance()
-        utils.reset_default_image(default_img, target_ROI_size, resize_for_squish)
+        default_img = utils.reset_default_image(default_img, target_ROI_size, resize_for_squish)
         detection_and_scoring = DetectionAndScoring()
         pool.start(detection_and_scoring)
 

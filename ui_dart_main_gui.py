@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dart_main_guiGVcEVb.ui'
+## Form generated from reading UI file 'dart_main_guiaHLusJ.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -1292,6 +1292,30 @@ class Ui_DartScorer(object):
 
         self.verticalLayout.addItem(self.verticalSpacer_3)
 
+        self.frame_5 = QFrame(self.Scores_Bg)
+        self.frame_5.setObjectName(u"frame_5")
+        self.frame_5.setMinimumSize(QSize(0, 50))
+        self.frame_5.setFrameShape(QFrame.StyledPanel)
+        self.frame_5.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_7 = QHBoxLayout(self.frame_5)
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.continue_button = QPushButton(self.frame_5)
+        self.continue_button.setObjectName(u"continue_button")
+        self.continue_button.setMaximumSize(QSize(90, 16777215))
+
+        self.horizontalLayout_7.addWidget(self.continue_button)
+
+
+        self.verticalLayout.addWidget(self.frame_5)
+
+        self.frame_4 = QFrame(self.Scores_Bg)
+        self.frame_4.setObjectName(u"frame_4")
+        self.frame_4.setMinimumSize(QSize(0, 20))
+        self.frame_4.setFrameShape(QFrame.StyledPanel)
+        self.frame_4.setFrameShadow(QFrame.Raised)
+
+        self.verticalLayout.addWidget(self.frame_4)
+
 
         self.horizontalLayout.addWidget(self.Scores_Bg)
 
@@ -1314,8 +1338,9 @@ class Ui_DartScorer(object):
         self.dart_board_image = QLabel(self.Dart_Board_Bg)
         self.dart_board_image.setObjectName(u"dart_board_image")
         self.dart_board_image.setGeometry(QRect(120, 60, 501, 501))
-        self.dart_board_image.setPixmap(QPixmap(u"Resources/Anonymous_dartboard.svg"))
+        self.dart_board_image.setPixmap(QPixmap(u"icons/Anonymous_dartboard.svg"))
         self.initial_score_comboBox = QComboBox(self.Dart_Board_Bg)
+        self.initial_score_comboBox.addItem("")
         self.initial_score_comboBox.addItem("")
         self.initial_score_comboBox.addItem("")
         self.initial_score_comboBox.setObjectName(u"initial_score_comboBox")
@@ -1346,6 +1371,7 @@ class Ui_DartScorer(object):
         self.player2_overall.setText(QCoreApplication.translate("DartScorer", u"Overall", None))
         self.player2_sum_round.setText("")
         self.press_enter_label.setText("")
+        self.continue_button.setText(QCoreApplication.translate("DartScorer", u"Continue", None))
         self.set_default_img_button.setText(QCoreApplication.translate("DartScorer", u"Set Default", None))
         self.start_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Start Measuring", None))
         self.stop_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Stop Measuring", None))
@@ -1353,6 +1379,7 @@ class Ui_DartScorer(object):
         self.dart_board_image.setText("")
         self.initial_score_comboBox.setItemText(0, QCoreApplication.translate("DartScorer", u"501", None))
         self.initial_score_comboBox.setItemText(1, QCoreApplication.translate("DartScorer", u"301", None))
+        self.initial_score_comboBox.setItemText(2, QCoreApplication.translate("DartScorer", u"101", None))
 
     # retranslateUi
 
