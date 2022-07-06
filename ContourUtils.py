@@ -3,6 +3,8 @@ import math
 import cv2
 import numpy as np
 
+markerCorners = None
+markerIds = None
 
 def midpoint(ptA, ptB):
     """
@@ -102,7 +104,7 @@ def findDis(pts1, pts2):
     return ((pts2[0]-pts1[0])**2 + (pts2[1]-pts1[1])**2)**0.5
 
 
-def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_outer_corners=False):
+def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_outer_corners=False, hold_position=False):
     """
     This function detects 4 AruCo Markers from the given Library with the IDs 1,2,3,4 (tl,tr,bl,br) and returns the ROI between them
     :param frame: the given frame as np array
@@ -110,6 +112,7 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
     :param draw: If to draw the detected Corners on the frame
     :return: the ROI
     """
+    global markerCorners, markerIds
     dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
 
     # Initialize the detector parameters using default values
@@ -120,8 +123,11 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
         inner_corners = [0, 1, 2, 3]
 
     # Detect the markers in the image
-    markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
-
+    if markerCorners is None and markerIds is None and not hold_position:
+        markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
+    else:
+        markerCorners = markerCorners
+        markerIds = markerIds
     if markerIds is not None:
         if all(elem in markerIds for elem in [[0], [1], [2], [3]]):
             # print("All in there")

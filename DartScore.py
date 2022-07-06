@@ -12,6 +12,7 @@ class Score:
 
     def setNominalScore(self, points):
         self.nominalScore = points
+        self.currentScore = points
 
     def getCurrentScore(self):
         return self.currentScore

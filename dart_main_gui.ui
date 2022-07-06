@@ -1047,8 +1047,81 @@ QProgressBar::chunk
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_3">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>150</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="maximumSize">
+             <size>
+              <width>200</width>
+              <height>200</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(255, 255, 255);
+
+selection-background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap>icons/darts-logo_white.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_5">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -1131,6 +1204,11 @@ QProgressBar::chunk
                  <height>30</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Player1</string>
                </property>
@@ -1152,6 +1230,11 @@ QProgressBar::chunk
                     <width>60</width>
                     <height>0</height>
                    </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>12</pointsize>
+                   </font>
                   </property>
                   <property name="styleSheet">
                    <string notr="true">background-color: rgb(135, 135, 135);</string>
@@ -1182,6 +1265,11 @@ QProgressBar::chunk
                     <height>0</height>
                    </size>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>12</pointsize>
+                   </font>
+                  </property>
                   <property name="styleSheet">
                    <string notr="true">background-color: rgb(135, 135, 135);</string>
                   </property>
@@ -1210,6 +1298,11 @@ QProgressBar::chunk
                     <width>60</width>
                     <height>0</height>
                    </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>12</pointsize>
+                   </font>
                   </property>
                   <property name="styleSheet">
                    <string notr="true">background-color: rgb(135, 135, 135);</string>
@@ -1255,6 +1348,11 @@ QProgressBar::chunk
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <item>
               <widget class="QLabel" name="player1_overall">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="styleSheet">
                 <string notr="true"/>
                </property>
@@ -1265,8 +1363,13 @@ QProgressBar::chunk
              </item>
              <item>
               <widget class="QLabel" name="player1_sum_round">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="text">
-                <string>Current Round</string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -1363,6 +1466,11 @@ QProgressBar::chunk
                  <height>30</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Player2</string>
                </property>
@@ -1384,6 +1492,11 @@ QProgressBar::chunk
                     <width>60</width>
                     <height>0</height>
                    </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>12</pointsize>
+                   </font>
                   </property>
                   <property name="styleSheet">
                    <string notr="true">background-color: rgb(135, 135, 135);</string>
@@ -1414,6 +1527,11 @@ QProgressBar::chunk
                     <height>0</height>
                    </size>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>12</pointsize>
+                   </font>
+                  </property>
                   <property name="styleSheet">
                    <string notr="true">background-color: rgb(135, 135, 135);</string>
                   </property>
@@ -1442,6 +1560,11 @@ QProgressBar::chunk
                     <width>60</width>
                     <height>0</height>
                    </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>12</pointsize>
+                   </font>
                   </property>
                   <property name="styleSheet">
                    <string notr="true">background-color: rgb(135, 135, 135);</string>
@@ -1487,6 +1610,11 @@ QProgressBar::chunk
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <item>
               <widget class="QLabel" name="player2_overall">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Overall</string>
                </property>
@@ -1494,8 +1622,13 @@ QProgressBar::chunk
              </item>
              <item>
               <widget class="QLabel" name="player2_sum_round">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="text">
-                <string>Current Round</string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -1503,6 +1636,37 @@ QProgressBar::chunk
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="press_enter_label">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color: rgb(255, 0, 0);</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
         </widget>
        </item>
        <item>
@@ -1533,9 +1697,9 @@ QProgressBar::chunk
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>560</y>
-         <width>92</width>
-         <height>23</height>
+         <y>550</y>
+         <width>101</width>
+         <height>31</height>
         </rect>
        </property>
        <property name="text">
@@ -1547,8 +1711,8 @@ QProgressBar::chunk
         <rect>
          <x>20</x>
          <y>30</y>
-         <width>92</width>
-         <height>23</height>
+         <width>101</width>
+         <height>31</height>
         </rect>
        </property>
        <property name="text">
@@ -1560,8 +1724,8 @@ QProgressBar::chunk
         <rect>
          <x>150</x>
          <y>30</y>
-         <width>92</width>
-         <height>23</height>
+         <width>101</width>
+         <height>31</height>
         </rect>
        </property>
        <property name="text">
@@ -1571,10 +1735,10 @@ QProgressBar::chunk
       <widget class="QPushButton" name="undo_last_throw_button">
        <property name="geometry">
         <rect>
-         <x>660</x>
-         <y>560</y>
-         <width>92</width>
-         <height>23</height>
+         <x>650</x>
+         <y>550</y>
+         <width>101</width>
+         <height>31</height>
         </rect>
        </property>
        <property name="text">
@@ -1596,6 +1760,26 @@ QProgressBar::chunk
        <property name="pixmap">
         <pixmap>Resources/Anonymous_dartboard.svg</pixmap>
        </property>
+      </widget>
+      <widget class="QComboBox" name="initial_score_comboBox">
+       <property name="geometry">
+        <rect>
+         <x>600</x>
+         <y>30</y>
+         <width>141</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>501</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>301</string>
+        </property>
+       </item>
       </widget>
      </widget>
     </item>

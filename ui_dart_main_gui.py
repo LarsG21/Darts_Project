@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dart_main_guiatQCVr.ui'
+## Form generated from reading UI file 'dart_main_guiGVcEVb.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -1042,10 +1042,37 @@ class Ui_DartScorer(object):
         self.Scores_Bg.setFrameShape(QFrame.StyledPanel)
         self.Scores_Bg.setFrameShadow(QFrame.Raised)
         self.verticalLayout = QVBoxLayout(self.Scores_Bg)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.verticalLayout.addItem(self.verticalSpacer_2)
+
+        self.frame_3 = QFrame(self.Scores_Bg)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setMinimumSize(QSize(0, 150))
+        self.frame_3.setFrameShape(QFrame.StyledPanel)
+        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_6 = QHBoxLayout(self.frame_3)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.label = QLabel(self.frame_3)
+        self.label.setObjectName(u"label")
+        self.label.setMaximumSize(QSize(200, 200))
+        self.label.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"\n"
+"selection-background-color: rgb(255, 255, 255);")
+        self.label.setPixmap(QPixmap(u"icons/darts-logo_white.png"))
+        self.label.setScaledContents(True)
+
+        self.horizontalLayout_6.addWidget(self.label)
+
+
+        self.verticalLayout.addWidget(self.frame_3)
+
+        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout.addItem(self.verticalSpacer_5)
 
         self.player_frame = QFrame(self.Scores_Bg)
         self.player_frame.setObjectName(u"player_frame")
@@ -1068,6 +1095,9 @@ class Ui_DartScorer(object):
         self.label_3.setObjectName(u"label_3")
         self.label_3.setMinimumSize(QSize(20, 20))
         self.label_3.setMaximumSize(QSize(16777215, 30))
+        font = QFont()
+        font.setPointSize(12)
+        self.label_3.setFont(font)
 
         self.verticalLayout_3.addWidget(self.label_3)
 
@@ -1080,6 +1110,7 @@ class Ui_DartScorer(object):
         self.player1_1 = QLabel(self.frame)
         self.player1_1.setObjectName(u"player1_1")
         self.player1_1.setMinimumSize(QSize(60, 0))
+        self.player1_1.setFont(font)
         self.player1_1.setStyleSheet(u"background-color: rgb(135, 135, 135);")
 
         self.horizontalLayout_3.addWidget(self.player1_1)
@@ -1091,6 +1122,7 @@ class Ui_DartScorer(object):
         self.player1_2 = QLabel(self.frame)
         self.player1_2.setObjectName(u"player1_2")
         self.player1_2.setMinimumSize(QSize(60, 0))
+        self.player1_2.setFont(font)
         self.player1_2.setStyleSheet(u"background-color: rgb(135, 135, 135);")
 
         self.horizontalLayout_3.addWidget(self.player1_2)
@@ -1102,6 +1134,7 @@ class Ui_DartScorer(object):
         self.player1_3 = QLabel(self.frame)
         self.player1_3.setObjectName(u"player1_3")
         self.player1_3.setMinimumSize(QSize(60, 0))
+        self.player1_3.setFont(font)
         self.player1_3.setStyleSheet(u"background-color: rgb(135, 135, 135);")
 
         self.horizontalLayout_3.addWidget(self.player1_3)
@@ -1125,12 +1158,14 @@ class Ui_DartScorer(object):
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.player1_overall = QLabel(self.overall_score_and_counter)
         self.player1_overall.setObjectName(u"player1_overall")
+        self.player1_overall.setFont(font)
         self.player1_overall.setStyleSheet(u"")
 
         self.verticalLayout_2.addWidget(self.player1_overall)
 
         self.player1_sum_round = QLabel(self.overall_score_and_counter)
         self.player1_sum_round.setObjectName(u"player1_sum_round")
+        self.player1_sum_round.setFont(font)
 
         self.verticalLayout_2.addWidget(self.player1_sum_round)
 
@@ -1165,6 +1200,7 @@ class Ui_DartScorer(object):
         self.label_7.setObjectName(u"label_7")
         self.label_7.setMinimumSize(QSize(20, 20))
         self.label_7.setMaximumSize(QSize(16777215, 30))
+        self.label_7.setFont(font)
 
         self.verticalLayout_4.addWidget(self.label_7)
 
@@ -1177,6 +1213,7 @@ class Ui_DartScorer(object):
         self.player2_1 = QLabel(self.frame_2)
         self.player2_1.setObjectName(u"player2_1")
         self.player2_1.setMinimumSize(QSize(60, 0))
+        self.player2_1.setFont(font)
         self.player2_1.setStyleSheet(u"background-color: rgb(135, 135, 135);")
 
         self.horizontalLayout_5.addWidget(self.player2_1)
@@ -1188,6 +1225,7 @@ class Ui_DartScorer(object):
         self.player2_2 = QLabel(self.frame_2)
         self.player2_2.setObjectName(u"player2_2")
         self.player2_2.setMinimumSize(QSize(60, 0))
+        self.player2_2.setFont(font)
         self.player2_2.setStyleSheet(u"background-color: rgb(135, 135, 135);")
 
         self.horizontalLayout_5.addWidget(self.player2_2)
@@ -1199,6 +1237,7 @@ class Ui_DartScorer(object):
         self.player2_3 = QLabel(self.frame_2)
         self.player2_3.setObjectName(u"player2_3")
         self.player2_3.setMinimumSize(QSize(60, 0))
+        self.player2_3.setFont(font)
         self.player2_3.setStyleSheet(u"background-color: rgb(135, 135, 135);")
 
         self.horizontalLayout_5.addWidget(self.player2_3)
@@ -1222,11 +1261,13 @@ class Ui_DartScorer(object):
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.player2_overall = QLabel(self.overall_score_and_counter_2)
         self.player2_overall.setObjectName(u"player2_overall")
+        self.player2_overall.setFont(font)
 
         self.verticalLayout_5.addWidget(self.player2_overall)
 
         self.player2_sum_round = QLabel(self.overall_score_and_counter_2)
         self.player2_sum_round.setObjectName(u"player2_sum_round")
+        self.player2_sum_round.setFont(font)
 
         self.verticalLayout_5.addWidget(self.player2_sum_round)
 
@@ -1235,6 +1276,17 @@ class Ui_DartScorer(object):
 
 
         self.verticalLayout.addWidget(self.player_frame_2)
+
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        self.verticalLayout.addItem(self.verticalSpacer_4)
+
+        self.press_enter_label = QLabel(self.Scores_Bg)
+        self.press_enter_label.setObjectName(u"press_enter_label")
+        self.press_enter_label.setFont(font)
+        self.press_enter_label.setStyleSheet(u"color: rgb(255, 0, 0);")
+
+        self.verticalLayout.addWidget(self.press_enter_label)
 
         self.verticalSpacer_3 = QSpacerItem(20, 160, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -1249,20 +1301,25 @@ class Ui_DartScorer(object):
         self.Dart_Board_Bg.setFrameShadow(QFrame.Raised)
         self.set_default_img_button = QPushButton(self.Dart_Board_Bg)
         self.set_default_img_button.setObjectName(u"set_default_img_button")
-        self.set_default_img_button.setGeometry(QRect(20, 560, 92, 23))
+        self.set_default_img_button.setGeometry(QRect(20, 550, 101, 31))
         self.start_measuring_button = QPushButton(self.Dart_Board_Bg)
         self.start_measuring_button.setObjectName(u"start_measuring_button")
-        self.start_measuring_button.setGeometry(QRect(20, 30, 92, 23))
+        self.start_measuring_button.setGeometry(QRect(20, 30, 101, 31))
         self.stop_measuring_button = QPushButton(self.Dart_Board_Bg)
         self.stop_measuring_button.setObjectName(u"stop_measuring_button")
-        self.stop_measuring_button.setGeometry(QRect(150, 30, 92, 23))
+        self.stop_measuring_button.setGeometry(QRect(150, 30, 101, 31))
         self.undo_last_throw_button = QPushButton(self.Dart_Board_Bg)
         self.undo_last_throw_button.setObjectName(u"undo_last_throw_button")
-        self.undo_last_throw_button.setGeometry(QRect(660, 560, 92, 23))
+        self.undo_last_throw_button.setGeometry(QRect(650, 550, 101, 31))
         self.dart_board_image = QLabel(self.Dart_Board_Bg)
         self.dart_board_image.setObjectName(u"dart_board_image")
         self.dart_board_image.setGeometry(QRect(120, 60, 501, 501))
         self.dart_board_image.setPixmap(QPixmap(u"Resources/Anonymous_dartboard.svg"))
+        self.initial_score_comboBox = QComboBox(self.Dart_Board_Bg)
+        self.initial_score_comboBox.addItem("")
+        self.initial_score_comboBox.addItem("")
+        self.initial_score_comboBox.setObjectName(u"initial_score_comboBox")
+        self.initial_score_comboBox.setGeometry(QRect(600, 30, 141, 31))
 
         self.horizontalLayout.addWidget(self.Dart_Board_Bg)
 
@@ -1275,22 +1332,27 @@ class Ui_DartScorer(object):
 
     def retranslateUi(self, DartScorer):
         DartScorer.setWindowTitle(QCoreApplication.translate("DartScorer", u"MainWindow", None))
+        self.label.setText("")
         self.label_3.setText(QCoreApplication.translate("DartScorer", u"Player1", None))
         self.player1_1.setText("")
         self.player1_2.setText("")
         self.player1_3.setText("")
         self.player1_overall.setText(QCoreApplication.translate("DartScorer", u"Overall", None))
-        self.player1_sum_round.setText(QCoreApplication.translate("DartScorer", u"Current Round", None))
+        self.player1_sum_round.setText("")
         self.label_7.setText(QCoreApplication.translate("DartScorer", u"Player2", None))
         self.player2_1.setText("")
         self.player2_2.setText("")
         self.player2_3.setText("")
         self.player2_overall.setText(QCoreApplication.translate("DartScorer", u"Overall", None))
-        self.player2_sum_round.setText(QCoreApplication.translate("DartScorer", u"Current Round", None))
+        self.player2_sum_round.setText("")
+        self.press_enter_label.setText("")
         self.set_default_img_button.setText(QCoreApplication.translate("DartScorer", u"Set Default", None))
         self.start_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Start Measuring", None))
         self.stop_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Stop Measuring", None))
         self.undo_last_throw_button.setText(QCoreApplication.translate("DartScorer", u"Undo last", None))
         self.dart_board_image.setText("")
+        self.initial_score_comboBox.setItemText(0, QCoreApplication.translate("DartScorer", u"501", None))
+        self.initial_score_comboBox.setItemText(1, QCoreApplication.translate("DartScorer", u"301", None))
+
     # retranslateUi
 
