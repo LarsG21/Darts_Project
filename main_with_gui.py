@@ -1,7 +1,5 @@
 import pickle
 import sys
-import time
-from random import randint
 from statistics import mode
 from time import sleep
 
@@ -14,13 +12,12 @@ from PySide2.QtWidgets import QApplication, QMainWindow
 
 import CalibrationWithUncertainty
 import ContourUtils
-import DartScore
-import dart_scorer_util
+from Dart_Scoring import dart_scorer_util, DartScore
 import gui
 import utils
 from FPS import FPS
-from qt_ui_classes import DartPositionLabel
-from ui_dart_main_gui import Ui_DartScorer
+from QT_GUI_Elements.qt_ui_classes import DartPositionLabel
+from QT_GUI_Elements.ui_dart_main_gui import Ui_DartScorer
 
 # Globals
 points = []
@@ -262,7 +259,7 @@ class DetectionAndScoring(QRunnable):
                             triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
                             triangle_np_array = cv2.UMat.get(triangle[1])
                             if triangle_np_array is not None:
-                                pt1, pt2, pt3 = triangle_np_array.astype(np.int32)  # TODO: ERROR
+                                pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
                             else:
                                 pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
                             # Display the triangles

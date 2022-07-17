@@ -6,14 +6,12 @@ from FPS import FPS
 
 import CalibrationWithUncertainty
 import ContourUtils
-from dart_scorer_util import update_score
+from Dart_Scoring.dart_scorer_util import update_score
 from utils import rez, reset_default_image
 import gui
 from CalibrationWithUncertainty import *
 
-import dart_scorer_util
-import DartScore
-
+from Dart_Scoring import dart_scorer_util, DartScore
 
 # Globals
 points = []

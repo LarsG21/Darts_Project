@@ -80,7 +80,7 @@ def create_gui():
     # cv2.createTrackbar("Circle4", "Dart Settings", 50, 100, empty)
     # cv2.createTrackbar("Circle5", "Dart Settings", 73, 100, empty)
     # cv2.createTrackbar("Circle6", "Dart Settings", 79, 100, empty)
-    cv2.createTrackbar("Circle1", "Dart Settings", 18, 100, empty)
+    cv2.createTrackbar("Circle1", "Dart Settings", 28, 100, empty)
     cv2.createTrackbar("Circle2", "Dart Settings", 10, 100, empty)
     cv2.createTrackbar("Circle3", "Dart Settings", 58, 100, empty)
     cv2.createTrackbar("Circle4", "Dart Settings", 66, 100, empty)
