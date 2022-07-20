@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dart_main_guiaHLusJ.ui'
+## Form generated from reading UI file 'dart_main_guioPLkhw.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -17,8 +17,8 @@ class Ui_DartScorer(object):
     def setupUi(self, DartScorer):
         if not DartScorer.objectName():
             DartScorer.setObjectName(u"DartScorer")
-        DartScorer.resize(1127, 600)
-        DartScorer.setMinimumSize(QSize(900, 600))
+        DartScorer.resize(1131, 642)
+        DartScorer.setMinimumSize(QSize(1131, 642))
         self.centralwidget = QWidget(DartScorer)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setStyleSheet(u"/*Copyright (c) DevSec Studio. All rights reserved.\n"
@@ -1288,9 +1288,46 @@ class Ui_DartScorer(object):
 
         self.verticalLayout.addWidget(self.press_enter_label)
 
+        self.continue_button = QPushButton(self.Scores_Bg)
+        self.continue_button.setObjectName(u"continue_button")
+
+        self.verticalLayout.addWidget(self.continue_button)
+
         self.verticalSpacer_3 = QSpacerItem(20, 160, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer_3)
+
+        self.frame_6 = QFrame(self.Scores_Bg)
+        self.frame_6.setObjectName(u"frame_6")
+        self.frame_6.setMinimumSize(QSize(0, 40))
+        self.frame_6.setFrameShape(QFrame.StyledPanel)
+        self.frame_6.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_8 = QHBoxLayout(self.frame_6)
+        self.horizontalLayout_8.setSpacing(0)
+        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.horizontalLayout_8.setContentsMargins(0, 0, 0, 0)
+        self.label_2 = QLabel(self.frame_6)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout_8.addWidget(self.label_2)
+
+        self.current_detection_sensitivity_lable = QLabel(self.frame_6)
+        self.current_detection_sensitivity_lable.setObjectName(u"current_detection_sensitivity_lable")
+        self.current_detection_sensitivity_lable.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_8.addWidget(self.current_detection_sensitivity_lable)
+
+
+        self.verticalLayout.addWidget(self.frame_6)
+
+        self.detection_sensitivity_slider = QSlider(self.Scores_Bg)
+        self.detection_sensitivity_slider.setObjectName(u"detection_sensitivity_slider")
+        self.detection_sensitivity_slider.setMinimum(15)
+        self.detection_sensitivity_slider.setMaximum(30)
+        self.detection_sensitivity_slider.setValue(22)
+        self.detection_sensitivity_slider.setOrientation(Qt.Horizontal)
+
+        self.verticalLayout.addWidget(self.detection_sensitivity_slider)
 
         self.frame_5 = QFrame(self.Scores_Bg)
         self.frame_5.setObjectName(u"frame_5")
@@ -1299,12 +1336,6 @@ class Ui_DartScorer(object):
         self.frame_5.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_7 = QHBoxLayout(self.frame_5)
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.continue_button = QPushButton(self.frame_5)
-        self.continue_button.setObjectName(u"continue_button")
-        self.continue_button.setMaximumSize(QSize(90, 16777215))
-
-        self.horizontalLayout_7.addWidget(self.continue_button)
-
 
         self.verticalLayout.addWidget(self.frame_5)
 
@@ -1372,6 +1403,8 @@ class Ui_DartScorer(object):
         self.player2_sum_round.setText("")
         self.press_enter_label.setText("")
         self.continue_button.setText(QCoreApplication.translate("DartScorer", u"Continue", None))
+        self.label_2.setText(QCoreApplication.translate("DartScorer", u"Detection Sensitivity:", None))
+        self.current_detection_sensitivity_lable.setText("")
         self.set_default_img_button.setText(QCoreApplication.translate("DartScorer", u"Set Default", None))
         self.start_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Start Measuring", None))
         self.stop_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Stop Measuring", None))

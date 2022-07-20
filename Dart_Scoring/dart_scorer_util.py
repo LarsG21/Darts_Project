@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 # radius limits for the different fields on the board
-import DartScore
+from Dart_Scoring import DartScore
 
 bullsLimit = 10.0
 singleBullsLimit = 15.0  # example values

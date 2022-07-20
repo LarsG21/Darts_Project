@@ -143,7 +143,8 @@ class MainWindow(QMainWindow):
         self.ui.stop_measuring_button.clicked.connect(lambda: UIFunctions.stop_detection_and_scoring(self))
         self.ui.undo_last_throw_button.clicked.connect(lambda: UIFunctions.undo_last_throw(self))
         self.ui.initial_score_comboBox.currentIndexChanged.connect(lambda: UIFunctions.update_game_settings(self))
-
+        self.ui.detection_sensitivity_slider.valueChanged.connect(lambda: UIFunctions.update_detection_sensitivity(self))
+        self.ui.continue_button.clicked.connect(lambda: UIFunctions.start_detection_and_scoring(self))
         self.DartPositions = {}
 
         #HIGHLIGHT: NEEDS TO CHANGE ONE LINE in ui_dart_main.py to work !
@@ -207,7 +208,7 @@ class DetectionAndScoring(QRunnable):
     def run(self):
         global previous_img, difference, default_img, ACTIVE_PLAYER, UNDO_LAST_FLAG
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
-        global new_dart_point, update_dart_point, TRIANGLE_DETECT_THRESH, minArea
+        global new_dart_point, update_dart_point, minArea
         while True:
             if STOP_DETECTION:
                 break
@@ -224,6 +225,8 @@ class DetectionAndScoring(QRunnable):
                     detect_dart_circle_and_set_limits(img_roi=img_roi)
 
                     # get the difference image
+                    if np.all(default_img==0): #TODO: Bad fix but works
+                        default_img = img_roi.copy()
                     difference = cv2.absdiff(img_roi, default_img)
                     # blur it for better edges
                     blur = cv2.GaussianBlur(difference, (5, 5), 0)
@@ -303,22 +306,30 @@ class DetectionAndScoring(QRunnable):
                                 print(f"Final mult {final_mult}")
                                 # Continue if enter is pressed
                                 if len(values_of_round) == 3:
-                                    window.ui.press_enter_label.setText("    1. Remove all Darts\n    2. Press Enter to start next round")
                                     UNDO_LAST_FLAG = False
-                                    if cv2.waitKey(0) & 0xFF == ord('\r'):
-                                        if not UNDO_LAST_FLAG:
-                                            UIFunctions.delete_all_x_on_board(window)
+                                    # if cv2.waitKey(0) & 0xFF == ord('\r'):
+                                    # if window.ui.continue_button.isChecked():
+                                    UIFunctions.stop_detection_and_scoring(window)
+                                    success, img = cap.read()   #Reset the default image after every dart
+                                    if success:
+                                        img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                                    default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
+                                    if not UNDO_LAST_FLAG:
+                                        UIFunctions.delete_all_x_on_board(window)
+                                        if not STOP_DETECTION:
                                             window.ui.press_enter_label.setText("")
-                                            if ACTIVE_PLAYER == 1:
-                                                dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                                ACTIVE_PLAYER = 2
-                                            elif ACTIVE_PLAYER == 2:
-                                                dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                                ACTIVE_PLAYER = 1
-                                            values_of_round = []
-                                            mults_of_round = []
-                                        else:
-                                            UNDO_LAST_FLAG = False
+                                        if ACTIVE_PLAYER == 1:
+                                            dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                            ACTIVE_PLAYER = 2
+                                        elif ACTIVE_PLAYER == 2:
+                                            dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                            ACTIVE_PLAYER = 1
+                                        values_of_round = []
+                                        mults_of_round = []
+                                    else:
+                                        UNDO_LAST_FLAG = False
+                                    # else:
+                                    #     pass
 
 
                                             # Reset the image
@@ -356,6 +367,11 @@ class DetectionAndScoring(QRunnable):
 
 
 class UIFunctions(QMainWindow):
+
+    def update_detection_sensitivity(self):
+        global TRIANGLE_DETECT_THRESH
+        TRIANGLE_DETECT_THRESH = self.ui.detection_sensitivity_slider.value()
+        self.ui.current_detection_sensitivity_lable.setText(f"{TRIANGLE_DETECT_THRESH}")
 
     def undo_last_throw(self):
         global values_of_round, mults_of_round, UNDO_LAST_FLAG
@@ -406,15 +422,24 @@ class UIFunctions(QMainWindow):
         pool.start(default_img_setter)
 
     def start_detection_and_scoring(self):
-        global STOP_DETECTION, default_img
+        global STOP_DETECTION, default_img, img_undist
         STOP_DETECTION = False
+        # change color of stop_measuring_button to transparent
+        self.ui.stop_measuring_button.setStyleSheet("background-color: transparent")
+        # change color of start_measuring_button to green
+        self.ui.start_measuring_button.setStyleSheet("background-color: green")
+        window.ui.press_enter_label.setText("")
         pool = QThreadPool.globalInstance()
-        default_img = utils.reset_default_image(default_img, target_ROI_size, resize_for_squish)
+        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         detection_and_scoring = DetectionAndScoring()
         pool.start(detection_and_scoring)
 
     def stop_detection_and_scoring(self):
         global STOP_DETECTION
+        # change color of stop_measuring_button to red
+        self.ui.stop_measuring_button.setStyleSheet("background-color: red")
+        self.ui.start_measuring_button.setStyleSheet("background-color: transparent")
+        window.ui.press_enter_label.setText("    1. Remove all Darts\n    2. Press Continue to start next round")
         STOP_DETECTION = True
 
     def update_game_settings(self):
@@ -485,5 +510,6 @@ if __name__ == "__main__":
     label_update_timer = QtCore.QTimer()
     label_update_timer.timeout.connect(lambda: UIFunctions.update_labels(window))
     label_update_timer.start(10)  # every 10 milliseconds
+
 
     sys.exit(app.exec_())
