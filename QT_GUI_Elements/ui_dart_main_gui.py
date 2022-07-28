@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dart_main_guiWNRDGH.ui'
+## Form generated from reading UI file 'dart_main_guiBerRjH.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -1325,7 +1325,7 @@ class Ui_DartScorer(object):
         self.detection_sensitivity_slider.setObjectName(u"detection_sensitivity_slider")
         self.detection_sensitivity_slider.setMinimum(10)
         self.detection_sensitivity_slider.setMaximum(30)
-        self.detection_sensitivity_slider.setValue(22)
+        self.detection_sensitivity_slider.setValue(11)
         self.detection_sensitivity_slider.setOrientation(Qt.Horizontal)
 
         self.verticalLayout.addWidget(self.detection_sensitivity_slider)

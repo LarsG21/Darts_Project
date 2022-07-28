@@ -8,7 +8,7 @@ import numpy as np
 from PySide2 import QtCore
 from PySide2.QtCore import QThreadPool, QRunnable
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide2.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import CalibrationWithUncertainty
 import ContourUtils
@@ -159,6 +159,9 @@ class MainWindow(QMainWindow):
         # self.DartPositions[DartPositionId].addDartPosition(300,100)
 
         self.show()
+
+    def warning(self, message="Default"):
+        QMessageBox.about(self, "Congratulations !", message)
 
 
 class DefaultImageSetter(QRunnable):
@@ -501,7 +504,11 @@ class UIFunctions(QMainWindow):
                 self.ui.player2_3.setText("-")
                 self.ui.player2_sum_round.setText("")
 
-
+        # if one of the players has won the game, show the winner
+        if score1.currentScore == 0:
+            window.warning("Player 1 has won the game!")
+        elif score2.currentScore == 0:
+            window.warning("Player 2 has won the game!")
 
         self.ui.player1_overall.setText(str(score1.currentScore))
         self.ui.player2_overall.setText(str(score2.currentScore))
