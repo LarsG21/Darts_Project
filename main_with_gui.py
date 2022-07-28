@@ -37,7 +37,7 @@ columns = 9  # 28    9
 squareSize = 30  # mm
 calibrationRuns = 1
 CAMERA_NUMBER = 1  # 0,1 is built-in, 2 is external webcam
-TRIANGLE_DETECT_THRESH = 24
+TRIANGLE_DETECT_THRESH = 11
 minArea = 800
 maxArea = 4000
 useMovingAverage = False
@@ -83,7 +83,7 @@ else:
                                                                                                     saveImages=False,
                                                                                                     webcam=True)
 target_ROI_size = (600, 600)
-resize_for_squish = (540, 600)
+resize_for_squish = (535, 600)
 
 Scaling_factor_for_x_placing_in_gui = (501/resize_for_squish[0], 501/resize_for_squish[1])
 
@@ -220,6 +220,10 @@ class DetectionAndScoring(QRunnable):
                 img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False, hold_position=True)
                 if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
                     img_roi = cv2.resize(img_roi, resize_for_squish)
+                    # resize img by a factor of 2
+                    img_show = cv2.resize(img_roi, dsize=(400, 400))
+                    cv2.imshow("Live", img_show)
+
                     cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
                     detect_dart_circle_and_set_limits(img_roi=img_roi)
@@ -302,8 +306,8 @@ class DetectionAndScoring(QRunnable):
                                 values_of_round.append(final_val)
                                 mults_of_round.append(final_mult)
                                 default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                                print(f"Final val {final_val}")
-                                print(f"Final mult {final_mult}")
+                                # print(f"Final val {final_val}")
+                                # print(f"Final mult {final_mult}")
                                 # Continue if enter is pressed
                                 if len(values_of_round) == 3:
                                     UNDO_LAST_FLAG = False
@@ -364,6 +368,7 @@ class DetectionAndScoring(QRunnable):
                 if cv2.waitKey(1) & 0xff == ord('q'):
                     cap.release()
                     exit()
+            # UIFunctions.update_labels(window)
 
 
 class UIFunctions(QMainWindow):
@@ -402,17 +407,17 @@ class UIFunctions(QMainWindow):
 
     def delete_all_x_on_board(self):
         print("LEN:", len(self.DartPositions.values()))
-        for lable in self.DartPositions.values():
-            print("Deleting: " + lable.text())
+        # for lable in self.DartPositions.values():
+            # lable.setText("")
             # del lable
-            lable.setText("")
+        # del self.DartPositions
 
     def place_x_on_board(self, pos_x, pos_y):
         global dart_id
         DartPositionId = dart_id
         dart_id = dart_id + 1
         self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
-        print(f"Placing: {str(int(pos_x*Scaling_factor_for_x_placing_in_gui[0])), str(int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))}")
+        # print(f"Placing: {str(int(pos_x*Scaling_factor_for_x_placing_in_gui[0])), str(int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))}")
         self.DartPositions[DartPositionId].addDartPosition(int(pos_x*Scaling_factor_for_x_placing_in_gui[0]),
                                                            int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))
 
@@ -449,9 +454,10 @@ class UIFunctions(QMainWindow):
 
 
     def update_labels(self):
+        print("Updating labels")
         global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_point, update_dart_point
-        if update_dart_point:
-            print(f"Updating dart point{new_dart_point[0], new_dart_point[1]}")
+        if update_dart_point and new_dart_point is not None:
+            # print(f"Updating dart point{new_dart_point[0], new_dart_point[1]}")
             UIFunctions.place_x_on_board(self, new_dart_point[0], new_dart_point[1])
             update_dart_point = False
         if ACTIVE_PLAYER == 1:
@@ -500,6 +506,7 @@ class UIFunctions(QMainWindow):
 
         self.ui.player1_overall.setText(str(score1.currentScore))
         self.ui.player2_overall.setText(str(score2.currentScore))
+        print("Updated labels END")
 
 
 

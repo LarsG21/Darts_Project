@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dart_main_guioPLkhw.ui'
+## Form generated from reading UI file 'dart_main_guiWNRDGH.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -17,8 +17,8 @@ class Ui_DartScorer(object):
     def setupUi(self, DartScorer):
         if not DartScorer.objectName():
             DartScorer.setObjectName(u"DartScorer")
-        DartScorer.resize(1131, 642)
-        DartScorer.setMinimumSize(QSize(1131, 642))
+        DartScorer.resize(1150, 630)
+        DartScorer.setMinimumSize(QSize(1150, 630))
         self.centralwidget = QWidget(DartScorer)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setStyleSheet(u"/*Copyright (c) DevSec Studio. All rights reserved.\n"
@@ -1037,6 +1037,7 @@ class Ui_DartScorer(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.Scores_Bg.sizePolicy().hasHeightForWidth())
         self.Scores_Bg.setSizePolicy(sizePolicy)
+        self.Scores_Bg.setMinimumSize(QSize(400, 0))
         self.Scores_Bg.setMaximumSize(QSize(350, 16777215))
         self.Scores_Bg.setStyleSheet(u"background-color: rgb(35, 35, 35);")
         self.Scores_Bg.setFrameShape(QFrame.StyledPanel)
@@ -1151,7 +1152,7 @@ class Ui_DartScorer(object):
 
         self.overall_score_and_counter = QFrame(self.player_frame)
         self.overall_score_and_counter.setObjectName(u"overall_score_and_counter")
-        self.overall_score_and_counter.setMinimumSize(QSize(80, 0))
+        self.overall_score_and_counter.setMinimumSize(QSize(100, 0))
         self.overall_score_and_counter.setFrameShape(QFrame.StyledPanel)
         self.overall_score_and_counter.setFrameShadow(QFrame.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.overall_score_and_counter)
@@ -1254,7 +1255,7 @@ class Ui_DartScorer(object):
 
         self.overall_score_and_counter_2 = QFrame(self.player_frame_2)
         self.overall_score_and_counter_2.setObjectName(u"overall_score_and_counter_2")
-        self.overall_score_and_counter_2.setMinimumSize(QSize(80, 0))
+        self.overall_score_and_counter_2.setMinimumSize(QSize(100, 0))
         self.overall_score_and_counter_2.setFrameShape(QFrame.StyledPanel)
         self.overall_score_and_counter_2.setFrameShadow(QFrame.Raised)
         self.verticalLayout_5 = QVBoxLayout(self.overall_score_and_counter_2)
@@ -1322,7 +1323,7 @@ class Ui_DartScorer(object):
 
         self.detection_sensitivity_slider = QSlider(self.Scores_Bg)
         self.detection_sensitivity_slider.setObjectName(u"detection_sensitivity_slider")
-        self.detection_sensitivity_slider.setMinimum(15)
+        self.detection_sensitivity_slider.setMinimum(10)
         self.detection_sensitivity_slider.setMaximum(30)
         self.detection_sensitivity_slider.setValue(22)
         self.detection_sensitivity_slider.setOrientation(Qt.Horizontal)
@@ -1356,16 +1357,18 @@ class Ui_DartScorer(object):
         self.Dart_Board_Bg.setFrameShadow(QFrame.Raised)
         self.set_default_img_button = QPushButton(self.Dart_Board_Bg)
         self.set_default_img_button.setObjectName(u"set_default_img_button")
-        self.set_default_img_button.setGeometry(QRect(20, 550, 101, 31))
+        self.set_default_img_button.setGeometry(QRect(20, 550, 120, 31))
         self.start_measuring_button = QPushButton(self.Dart_Board_Bg)
         self.start_measuring_button.setObjectName(u"start_measuring_button")
-        self.start_measuring_button.setGeometry(QRect(20, 30, 101, 31))
+        self.start_measuring_button.setGeometry(QRect(20, 30, 120, 31))
+        self.start_measuring_button.setMinimumSize(QSize(92, 0))
         self.stop_measuring_button = QPushButton(self.Dart_Board_Bg)
         self.stop_measuring_button.setObjectName(u"stop_measuring_button")
-        self.stop_measuring_button.setGeometry(QRect(150, 30, 101, 31))
+        self.stop_measuring_button.setGeometry(QRect(150, 30, 120, 31))
+        self.stop_measuring_button.setMinimumSize(QSize(92, 0))
         self.undo_last_throw_button = QPushButton(self.Dart_Board_Bg)
         self.undo_last_throw_button.setObjectName(u"undo_last_throw_button")
-        self.undo_last_throw_button.setGeometry(QRect(650, 550, 101, 31))
+        self.undo_last_throw_button.setGeometry(QRect(610, 550, 120, 31))
         self.dart_board_image = QLabel(self.Dart_Board_Bg)
         self.dart_board_image.setObjectName(u"dart_board_image")
         self.dart_board_image.setGeometry(QRect(120, 60, 501, 501))
@@ -1375,7 +1378,7 @@ class Ui_DartScorer(object):
         self.initial_score_comboBox.addItem("")
         self.initial_score_comboBox.addItem("")
         self.initial_score_comboBox.setObjectName(u"initial_score_comboBox")
-        self.initial_score_comboBox.setGeometry(QRect(600, 30, 141, 31))
+        self.initial_score_comboBox.setGeometry(QRect(570, 30, 160, 31))
 
         self.horizontalLayout.addWidget(self.Dart_Board_Bg)
 
@@ -1406,8 +1409,8 @@ class Ui_DartScorer(object):
         self.label_2.setText(QCoreApplication.translate("DartScorer", u"Detection Sensitivity:", None))
         self.current_detection_sensitivity_lable.setText("")
         self.set_default_img_button.setText(QCoreApplication.translate("DartScorer", u"Set Default", None))
-        self.start_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Start Measuring", None))
-        self.stop_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Stop Measuring", None))
+        self.start_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Start", None))
+        self.stop_measuring_button.setText(QCoreApplication.translate("DartScorer", u"Stop", None))
         self.undo_last_throw_button.setText(QCoreApplication.translate("DartScorer", u"Undo last", None))
         self.dart_board_image.setText("")
         self.initial_score_comboBox.setItemText(0, QCoreApplication.translate("DartScorer", u"501", None))

@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1131</width>
-    <height>642</height>
+    <width>1150</width>
+    <height>630</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>1131</width>
-    <height>642</height>
+    <width>1150</width>
+    <height>630</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -1031,6 +1031,12 @@ QProgressBar::chunk
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
         <width>350</width>
@@ -1335,7 +1341,7 @@ selection-background-color: rgb(255, 255, 255);</string>
            <widget class="QFrame" name="overall_score_and_counter">
             <property name="minimumSize">
              <size>
-              <width>80</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>
@@ -1597,7 +1603,7 @@ selection-background-color: rgb(255, 255, 255);</string>
            <widget class="QFrame" name="overall_score_and_counter_2">
             <property name="minimumSize">
              <size>
-              <width>80</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>
@@ -1742,7 +1748,7 @@ selection-background-color: rgb(255, 255, 255);</string>
        <item>
         <widget class="QSlider" name="detection_sensitivity_slider">
          <property name="minimum">
-          <number>15</number>
+          <number>10</number>
          </property>
          <property name="maximum">
           <number>30</number>
@@ -1804,7 +1810,7 @@ selection-background-color: rgb(255, 255, 255);</string>
         <rect>
          <x>20</x>
          <y>550</y>
-         <width>101</width>
+         <width>120</width>
          <height>31</height>
         </rect>
        </property>
@@ -1817,12 +1823,18 @@ selection-background-color: rgb(255, 255, 255);</string>
         <rect>
          <x>20</x>
          <y>30</y>
-         <width>101</width>
+         <width>120</width>
          <height>31</height>
         </rect>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>92</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
-        <string>Start Measuring</string>
+        <string>Start</string>
        </property>
       </widget>
       <widget class="QPushButton" name="stop_measuring_button">
@@ -1830,20 +1842,26 @@ selection-background-color: rgb(255, 255, 255);</string>
         <rect>
          <x>150</x>
          <y>30</y>
-         <width>101</width>
+         <width>120</width>
          <height>31</height>
         </rect>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>92</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
-        <string>Stop Measuring</string>
+        <string>Stop</string>
        </property>
       </widget>
       <widget class="QPushButton" name="undo_last_throw_button">
        <property name="geometry">
         <rect>
-         <x>650</x>
+         <x>610</x>
          <y>550</y>
-         <width>101</width>
+         <width>120</width>
          <height>31</height>
         </rect>
        </property>
@@ -1870,9 +1888,9 @@ selection-background-color: rgb(255, 255, 255);</string>
       <widget class="QComboBox" name="initial_score_comboBox">
        <property name="geometry">
         <rect>
-         <x>600</x>
+         <x>570</x>
          <y>30</y>
-         <width>141</width>
+         <width>160</width>
          <height>31</height>
         </rect>
        </property>
