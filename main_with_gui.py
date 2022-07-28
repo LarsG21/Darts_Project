@@ -319,7 +319,6 @@ class DetectionAndScoring(QRunnable):
                                         img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
                                     default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
                                     if not UNDO_LAST_FLAG:
-                                        UIFunctions.delete_all_x_on_board(window)
                                         if not STOP_DETECTION:
                                             window.ui.press_enter_label.setText("")
                                         if ACTIVE_PLAYER == 1:
@@ -407,10 +406,9 @@ class UIFunctions(QMainWindow):
 
     def delete_all_x_on_board(self):
         print("LEN:", len(self.DartPositions.values()))
-        # for lable in self.DartPositions.values():
-            # lable.setText("")
-            # del lable
-        # del self.DartPositions
+        for lable in self.DartPositions.values():
+            lable.setText("")
+        self.DartPositions = {}
 
     def place_x_on_board(self, pos_x, pos_y):
         global dart_id
@@ -437,6 +435,7 @@ class UIFunctions(QMainWindow):
         pool = QThreadPool.globalInstance()
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         detection_and_scoring = DetectionAndScoring()
+        UIFunctions.delete_all_x_on_board(window)################################
         pool.start(detection_and_scoring)
 
     def stop_detection_and_scoring(self):
@@ -454,7 +453,6 @@ class UIFunctions(QMainWindow):
 
 
     def update_labels(self):
-        print("Updating labels")
         global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_point, update_dart_point
         if update_dart_point and new_dart_point is not None:
             # print(f"Updating dart point{new_dart_point[0], new_dart_point[1]}")
@@ -504,10 +502,9 @@ class UIFunctions(QMainWindow):
                 self.ui.player2_sum_round.setText("")
 
 
+
         self.ui.player1_overall.setText(str(score1.currentScore))
         self.ui.player2_overall.setText(str(score2.currentScore))
-        print("Updated labels END")
-
 
 
 
