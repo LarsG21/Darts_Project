@@ -1748,7 +1748,7 @@ selection-background-color: rgb(255, 255, 255);</string>
        <item>
         <widget class="QSlider" name="detection_sensitivity_slider">
          <property name="minimum">
-          <number>10</number>
+          <number>5</number>
          </property>
          <property name="maximum">
           <number>30</number>
