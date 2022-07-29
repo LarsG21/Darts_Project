@@ -38,7 +38,7 @@ The complete detection pipline looks something like this:
 
 The overall pipeline is summarized in this flowchart (currently only in German):
 
-![](Resources/Doku/Flussdiagramm Master Darts.png)
+![](Resources/Doku/Flussdiagramm_Master_Darts.png)
 ## Setup
 
 ### Hardware
