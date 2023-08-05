@@ -25,7 +25,7 @@ intersectp = []
 ellipse_vertices = []
 newpoints = []
 intersectp_s = []
-dart_point = None
+dart_tip = None
 ACTIVE_PLAYER = 1
 UNDO_LAST_FLAG = False
 DARTBOARD_AREA = 0
@@ -46,7 +46,7 @@ scored_mults = []
 values_of_round = []
 mults_of_round = []
 
-new_dart_point = None
+new_dart_tip = None
 update_dart_point = False
 
 images_for_rolling_average = []
@@ -81,9 +81,9 @@ if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
                                                                                                         saveImages=False,
                                                                                                         webcam=True)
 target_ROI_size = (600, 600)
-resize_for_squish = (600, 600)      # Squish the image if the circle doesnt quite fit
+resize_for_squish = (600, 600)  # Squish the image if the circle doesnt quite fit
 
-Scaling_factor_for_x_placing_in_gui = (501/resize_for_squish[0], 501/resize_for_squish[1])
+Scaling_factor_for_x_placing_in_gui = (501 / resize_for_squish[0], 501 / resize_for_squish[1])
 
 previous_img = np.zeros((target_ROI_size[0], target_ROI_size[1], 3)).astype(np.uint8)
 difference = np.zeros(target_ROI_size).astype(np.uint8)
@@ -100,12 +100,12 @@ def detect_dart_circle_and_set_limits(img_roi):
     minArea = 800
     erosions = 1
     dilations = 1
-    epsilon = 5/1000
+    epsilon = 5 / 1000
     showFilters = 0
     automaticMode = 1
-    threshold_new = 32/100
-    global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current,\
-            y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA
+    threshold_new = 32 / 100
+    global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current, \
+        y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA
     imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
                                                                 gaussFilters=noGauss, minArea=minArea,
                                                                 epsilon=epsilon, draw=False,
@@ -115,7 +115,7 @@ def detect_dart_circle_and_set_limits(img_roi):
     # Create Radien in pixels
     image_area = img_roi.shape[0] * img_roi.shape[1]
     for cnt in contours:
-        if image_area*0.5 < cnt[1] < image_area*0.9:        # Dart board should take between 50% and 90% of the image
+        if image_area * 0.5 < cnt[1] < image_area * 0.9:  # Dart board should take between 50% and 90% of the image
             # Create the outermost Circle
             if ellipse is None or x_offset_current != x_offset or y_offset_current != y_offset:  # Save the outer most ellipse for later to avoid useless re calculation !
                 x_offset_current, y_offset_current = x_offset, y_offset
@@ -147,7 +147,6 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)  # Set up the external generated ui
         self.setWindowIcon(QIcon('icons/dart_icon.ico'))
         self.setWindowTitle("Dart Master")
-
 
         # Buttons
         self.ui.set_default_img_button.clicked.connect(lambda: UIFunctions.set_default_image(self))
@@ -192,13 +191,13 @@ class DefaultImageSetter(QRunnable):
                     cv2.waitKey(1)
                     found_markers = True
                 if found_markers:
-                    cv2.putText(img_undist,"Found markers press/hold x to save", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv2.putText(img_undist, "Found markers press/hold x to save", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                     if cv2.waitKey(1) & 0xff == ord('x'):
                         cv2.destroyWindow("Preview")
                         cv2.destroyWindow("Default")
                         break
                 else:
-                    cv2.putText(img_undist,"No markers found", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.putText(img_undist, "No markers found", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 cv2.imshow("Preview", img_undist)
 
 
@@ -208,18 +207,17 @@ class DetectionAndScoring(QRunnable):
         self.ser.close()
 
     def __init__(self):
-        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, \
-             score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img
+        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_tip, TRIANGLE_DETECT_THRESH, \
+            score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img
         super().__init__()
         gui.create_gui()
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         cv2.destroyWindow("Object measurement")
 
-
     def run(self):
         global previous_img, difference, default_img, ACTIVE_PLAYER, UNDO_LAST_FLAG
-        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
-        global new_dart_point, update_dart_point, minArea, DARTBOARD_AREA
+        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_tip, TRIANGLE_DETECT_THRESH, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
+        global new_dart_tip, update_dart_point, minArea, DARTBOARD_AREA
         while True:
             if STOP_DETECTION:
                 break
@@ -240,12 +238,11 @@ class DetectionAndScoring(QRunnable):
                     # cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
                     ret = detect_dart_circle_and_set_limits(img_roi=img_roi)
-                    if center_ellipse == (0,0):  # If dartboard was never detected raise exception
+                    if center_ellipse == (0, 0):  # If dartboard was never detected raise exception
                         raise Exception("No dartboard detected please restart!")
 
-
                     # get the difference image
-                    if default_img is None or np.all(default_img==0): #TODO: Bad fix but works
+                    if default_img is None or np.all(default_img == 0):  # TODO: Bad fix but works
                         default_img = img_roi.copy()
 
                     difference = cv2.absdiff(img_roi, default_img)
@@ -253,80 +250,76 @@ class DetectionAndScoring(QRunnable):
                     gray, thresh = self.prepare_differnce_image(TRIANGLE_DETECT_THRESH, difference)
                     contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                    minArea = 0.003 * DARTBOARD_AREA    # Darts are > 0.3% of the dartboard area
-                    for i in contours:
-                        area = cv2.contourArea(i)
-                        if minArea < area:
-                            points_list = i.reshape(i.shape[0], i.shape[2])
-                            triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
-                            triangle_np_array = cv2.UMat.get(triangle[1])
-                            if triangle_np_array is not None:
-                                pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
-                            else:
-                                pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
+                    minArea = 0.003 * DARTBOARD_AREA  # Darts are > 0.3% of the dartboard area
+                    contours = [i for i in contours if cv2.contourArea(i) > minArea]    # Filter out contours that are too small
+                    for contour in contours:
+                        points_list = contour.reshape(contour.shape[0], contour.shape[2])
+                        triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
+                        triangle_np_array = cv2.UMat.get(triangle[1])
+                        if triangle_np_array is not None:
+                            pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
+                        else:
+                            pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
 
-                            dart_point, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
-                            # Display the Dart point
-                            cv2.circle(img_roi, dart_point, 4, (0, 0, 255), -1)
+                        dart_tip, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
+                        # Display the Dart point
+                        cv2.circle(img_roi, dart_tip, 4, (0, 0, 255), -1)
 
-                            self.draw_detected_darts(dart_point, pt1, pt2, pt3, thresh)
+                        self.draw_detected_darts(dart_tip, pt1, pt2, pt3, thresh)
 
-                            radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
-                            value, mult = dart_scorer_util.evaluateThrow(radius, angle)
+                        bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_tip)
+                        cv2.line(img_roi, dart_tip, bottom_point, (0, 0, 255), 2)
 
-                            bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_point)
-                            cv2.line(img_roi, dart_point, bottom_point, (0, 0, 255), 2)
+                        k = -0.215  # scaling factor for position adjustment of dart tip
+                        vect = (dart_tip - bottom_point)
+                        new_dart_tip = dart_tip + k * vect
 
-                            k = -0.215  # scaling factor
-                            vect = (dart_point - bottom_point)
-                            new_dart_point = dart_point + k * vect
+                        cv2.circle(img_roi, new_dart_tip.astype(np.int32), 4, (0, 255, 0), -1)
+                        new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
+                        new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
 
-                            cv2.circle(img_roi, new_dart_point.astype(np.int32), 4, (0, 255, 0), -1)
-                            new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_point[0], new_dart_point[1])
-                            new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
-
-                            if len(scored_values) <= 20:    # Wait for 20 Results
-                                scored_values.append(new_val)
-                                scored_mults.append(new_mult)
-                            else:
-                                if UNDO_LAST_FLAG:
-                                    window.ui.press_enter_label.setText("")
-                                update_dart_point = True
-                                final_val = mode(scored_values) # Take the most frequent result and use that as the final result
-                                final_mult = mode(scored_mults)
-                                values_of_round.append(final_val)
-                                mults_of_round.append(final_mult)
-                                default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                                # print(f"Final val {final_val}")
-                                # print(f"Final mult {final_mult}")
-                                # Continue if enter is pressed
-                                if len(values_of_round) == 3:
-                                    UNDO_LAST_FLAG = False
-                                    # if cv2.waitKey(0) & 0xFF == ord('\r'):
-                                    # if window.ui.continue_button.isChecked():
-                                    UIFunctions.stop_detection_and_scoring(window)
-                                    success, img = cap.read()   #Reset the default image after every dart
-                                    if success:
-                                        if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
-                                            img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-                                        else:
-                                            img_undist = img
-                                    default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                                    if not UNDO_LAST_FLAG:
-                                        if not STOP_DETECTION:
-                                            window.ui.press_enter_label.setText("")
-                                        if ACTIVE_PLAYER == 1:
-                                            dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                            ACTIVE_PLAYER = 2
-                                        elif ACTIVE_PLAYER == 2:
-                                            dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                            ACTIVE_PLAYER = 1
-                                        values_of_round = []
-                                        mults_of_round = []
+                        if len(scored_values) <= 20:  # Wait for 20 Results
+                            scored_values.append(new_val)
+                            scored_mults.append(new_mult)
+                        else:
+                            if UNDO_LAST_FLAG:
+                                window.ui.press_enter_label.setText("")
+                            update_dart_point = True
+                            final_val = mode(scored_values)  # Take the most frequent result and use that as the final result
+                            final_mult = mode(scored_mults)
+                            values_of_round.append(final_val)
+                            mults_of_round.append(final_mult)
+                            default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
+                            # print(f"Final val {final_val}")
+                            # print(f"Final mult {final_mult}")
+                            # Continue if enter is pressed
+                            if len(values_of_round) == 3:
+                                UNDO_LAST_FLAG = False
+                                # if cv2.waitKey(0) & 0xFF == ord('\r'):
+                                # if window.ui.continue_button.isChecked():
+                                UIFunctions.stop_detection_and_scoring(window)
+                                success, img = cap.read()  # Reset the default image after every dart
+                                if success:
+                                    if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+                                        img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
                                     else:
-                                        UNDO_LAST_FLAG = False
-                                scored_values = []
-                                scored_mults = []
+                                        img_undist = img
+                                default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
+                                if not UNDO_LAST_FLAG:
+                                    if not STOP_DETECTION:
+                                        window.ui.press_enter_label.setText("")
+                                    if ACTIVE_PLAYER == 1:
+                                        dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                        ACTIVE_PLAYER = 2
+                                    elif ACTIVE_PLAYER == 2:
+                                        dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                        ACTIVE_PLAYER = 1
+                                    values_of_round = []
+                                    mults_of_round = []
+                                else:
+                                    UNDO_LAST_FLAG = False
+                            scored_values = []
+                            scored_mults = []
 
                     cv2.imshow("Threshold", thresh)
 
@@ -339,8 +332,6 @@ class DetectionAndScoring(QRunnable):
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_4 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_5 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_6 / 100)), (255, 0, 255), 1)
-
-
 
                     fps, img_roi = fpsReader.update(img_roi)
                     cv2.imshow("Dart Settings", utils.rez(img_roi, 1.5))
@@ -407,7 +398,6 @@ class UIFunctions(QMainWindow):
 
             list(self.DartPositions.values())[-1].setText("")
 
-
     def delete_all_x_on_board(self):
         print("LEN:", len(self.DartPositions.values()))
         for lable in self.DartPositions.values():
@@ -420,8 +410,8 @@ class UIFunctions(QMainWindow):
         dart_id = dart_id + 1
         self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
         # print(f"Placing: {str(int(pos_x*Scaling_factor_for_x_placing_in_gui[0])), str(int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))}")
-        self.DartPositions[DartPositionId].addDartPosition(int(pos_x*Scaling_factor_for_x_placing_in_gui[0]),
-                                                           int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))
+        self.DartPositions[DartPositionId].addDartPosition(int(pos_x * Scaling_factor_for_x_placing_in_gui[0]),
+                                                           int(pos_y * Scaling_factor_for_x_placing_in_gui[1]))
 
     def set_default_image(self):
         pool = QThreadPool.globalInstance()
@@ -439,7 +429,7 @@ class UIFunctions(QMainWindow):
         pool = QThreadPool.globalInstance()
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         detection_and_scoring = DetectionAndScoring()
-        UIFunctions.delete_all_x_on_board(window)################################
+        UIFunctions.delete_all_x_on_board(window)  ################################
         pool.start(detection_and_scoring)
 
     def stop_detection_and_scoring(self):
@@ -455,12 +445,11 @@ class UIFunctions(QMainWindow):
         score1.setNominalScore(score)
         score2.setNominalScore(score)
 
-
     def update_labels(self):
-        global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_point, update_dart_point
-        if update_dart_point and new_dart_point is not None:
-            # print(f"Updating dart point{new_dart_point[0], new_dart_point[1]}")
-            UIFunctions.place_x_on_board(self, new_dart_point[0], new_dart_point[1])
+        global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_tip, update_dart_point
+        if update_dart_point and new_dart_tip is not None:
+            # print(f"Updating dart point{new_dart_tip[0], new_dart_tip[1]}")
+            UIFunctions.place_x_on_board(self, new_dart_tip[0], new_dart_tip[1])
             update_dart_point = False
         if ACTIVE_PLAYER == 1:
             self.ui.player_frame.setStyleSheet("background-color: #3a3a3a;")
@@ -468,16 +457,16 @@ class UIFunctions(QMainWindow):
             # self.ui.player1_sum_round.setText(str(sum(values_of_round)))
             if len(values_of_round) == 1:
                 self.ui.player1_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
-                self.ui.player1_sum_round.setText(str(values_of_round[0]*mults_of_round[0]))
+                self.ui.player1_sum_round.setText(str(values_of_round[0] * mults_of_round[0]))
             elif len(values_of_round) == 2:
                 self.ui.player1_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
                 self.ui.player1_2.setText(f"{values_of_round[1] * mults_of_round[1]}")
-                self.ui.player1_sum_round.setText(str(values_of_round[0]*mults_of_round[0] + values_of_round[1]*mults_of_round[1]))
+                self.ui.player1_sum_round.setText(str(values_of_round[0] * mults_of_round[0] + values_of_round[1] * mults_of_round[1]))
             elif len(values_of_round) == 3:
                 self.ui.player1_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
                 self.ui.player1_2.setText(f"{values_of_round[1] * mults_of_round[1]}")
                 self.ui.player1_3.setText(f"{values_of_round[2] * mults_of_round[2]}")
-                self.ui.player1_sum_round.setText(str(values_of_round[0]*mults_of_round[0] + values_of_round[1]*mults_of_round[1] + values_of_round[2]*mults_of_round[2]))
+                self.ui.player1_sum_round.setText(str(values_of_round[0] * mults_of_round[0] + values_of_round[1] * mults_of_round[1] + values_of_round[2] * mults_of_round[2]))
             else:
                 self.ui.player1_1.setText("-")
                 self.ui.player1_2.setText("-")
@@ -489,16 +478,16 @@ class UIFunctions(QMainWindow):
             self.ui.player2_sum_round.setText(str(sum(values_of_round)))
             if len(values_of_round) == 1:
                 self.ui.player2_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
-                self.ui.player2_sum_round.setText(str(values_of_round[0]*mults_of_round[0]))
+                self.ui.player2_sum_round.setText(str(values_of_round[0] * mults_of_round[0]))
             elif len(values_of_round) == 2:
                 self.ui.player2_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
                 self.ui.player2_2.setText(f"{values_of_round[1] * mults_of_round[1]}")
-                self.ui.player2_sum_round.setText(str(values_of_round[0]*mults_of_round[0] + values_of_round[1]*mults_of_round[1]))
+                self.ui.player2_sum_round.setText(str(values_of_round[0] * mults_of_round[0] + values_of_round[1] * mults_of_round[1]))
             elif len(values_of_round) == 3:
                 self.ui.player2_1.setText(f"{values_of_round[0] * mults_of_round[0]}")
                 self.ui.player2_2.setText(f"{values_of_round[1] * mults_of_round[1]}")
                 self.ui.player2_3.setText(f"{values_of_round[2] * mults_of_round[2]}")
-                self.ui.player2_sum_round.setText(str(values_of_round[0]*mults_of_round[0] + values_of_round[1]*mults_of_round[1] + values_of_round[2]*mults_of_round[2]))
+                self.ui.player2_sum_round.setText(str(values_of_round[0] * mults_of_round[0] + values_of_round[1] * mults_of_round[1] + values_of_round[2] * mults_of_round[2]))
             else:
                 self.ui.player2_1.setText("-")
                 self.ui.player2_2.setText("-")
@@ -515,13 +504,11 @@ class UIFunctions(QMainWindow):
         self.ui.player2_overall.setText(str(score2.currentScore))
 
 
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     label_update_timer = QtCore.QTimer()
     label_update_timer.timeout.connect(lambda: UIFunctions.update_labels(window))
     label_update_timer.start(10)  # every 10 milliseconds
-
 
     sys.exit(app.exec_())
