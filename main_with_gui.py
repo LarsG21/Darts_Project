@@ -29,14 +29,11 @@ dart_point = None
 ACTIVE_PLAYER = 1
 UNDO_LAST_FLAG = False
 DARTBOARD_AREA = 0
+center_ellipse = (0, 0)
 
 # #############  Config  ####################
 USE_CAMERA_CALIBRATION_TO_UNDISTORT = True
 loadSavedParameters = True
-rows = 6  # 17   6
-columns = 9  # 28    9
-squareSize = 30  # mm
-calibrationRuns = 1
 CAMERA_NUMBER = 1  # 0,1 is built-in, 2 is external webcam
 TRIANGLE_DETECT_THRESH = 11
 minArea = 800
@@ -77,10 +74,10 @@ if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
         print(meanDIST)
         print("Parameters Loaded")
     else:
-        meanMTX, meanDIST, uncertaintyMTX, uncertaintyDIST = CalibrationWithUncertainty.calibrateCamera(cap=cap, rows=rows,
-                                                                                                        columns=columns,
-                                                                                                        squareSize=squareSize,
-                                                                                                        runs=calibrationRuns,
+        meanMTX, meanDIST, uncertaintyMTX, uncertaintyDIST = CalibrationWithUncertainty.calibrateCamera(cap=cap, rows=6,
+                                                                                                        columns=9,
+                                                                                                        squareSize=30,
+                                                                                                        runs=1,
                                                                                                         saveImages=False,
                                                                                                         webcam=True)
 target_ROI_size = (600, 600)
@@ -161,17 +158,6 @@ class MainWindow(QMainWindow):
         self.ui.detection_sensitivity_slider.valueChanged.connect(lambda: UIFunctions.update_detection_sensitivity(self))
         self.ui.continue_button.clicked.connect(lambda: UIFunctions.start_detection_and_scoring(self))
         self.DartPositions = {}
-
-        #HIGHLIGHT: NEEDS TO CHANGE ONE LINE in ui_dart_main.py to work !
-        # self.ui.dart_board_image = DartPositionLabel(self.ui.Dart_Board_Bg)
-        # Changes Type of Label to DartPositionLabel to enable adding of Dart Positions
-
-        # DartPositionId = randint(1, 10000)
-        # self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
-        # self.DartPositions[DartPositionId].addDartPositionRandomly()
-        # DartPositionId = randint(1, 10000)
-        # self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
-        # self.DartPositions[DartPositionId].addDartPosition(300,100)
 
         self.show()
 
@@ -254,9 +240,9 @@ class DetectionAndScoring(QRunnable):
                     # cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
                     ret = detect_dart_circle_and_set_limits(img_roi=img_roi)
-                    # if not ret:
-                    #     print("No dartboard detected !")
-                    #     continue
+                    if center_ellipse == (0,0):  # If dartboard was never detected raise exception
+                        raise Exception("No dartboard detected please restart!")
+
 
                     # get the difference image
                     if default_img is None or np.all(default_img==0): #TODO: Bad fix but works
@@ -265,9 +251,9 @@ class DetectionAndScoring(QRunnable):
                     difference = cv2.absdiff(img_roi, default_img)
                     # blur it for better edges
                     gray, thresh = self.prepare_differnce_image(TRIANGLE_DETECT_THRESH, difference)
-                    contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                    minArea = 0.003 * DARTBOARD_AREA
+                    minArea = 0.003 * DARTBOARD_AREA    # Darts are > 0.3% of the dartboard area
                     for i in contours:
                         area = cv2.contourArea(i)
                         if minArea < area:
@@ -278,17 +264,12 @@ class DetectionAndScoring(QRunnable):
                                 pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
                             else:
                                 pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
-                            # Display the triangles
-                            cv2.line(thresh, pt1.ravel(), pt2.ravel(), (255, 0, 255), 2)
-                            cv2.line(thresh, pt2.ravel(), pt3.ravel(), (255, 0, 255), 2)
-                            cv2.line(thresh, pt3.ravel(), pt1.ravel(), (255, 0, 255), 2)
 
                             dart_point, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
-
                             # Display the Dart point
-                            cv2.circle(thresh, dart_point, 4, (0, 0, 255), -1)
                             cv2.circle(img_roi, dart_point, 4, (0, 0, 255), -1)
 
+                            self.draw_detected_darts(dart_point, pt1, pt2, pt3, thresh)
 
                             radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
                             value, mult = dart_scorer_util.evaluateThrow(radius, angle)
@@ -344,11 +325,6 @@ class DetectionAndScoring(QRunnable):
                                         mults_of_round = []
                                     else:
                                         UNDO_LAST_FLAG = False
-                                    # else:
-                                    #     pass
-
-
-                                            # Reset the image
                                 scored_values = []
                                 scored_mults = []
 
@@ -357,7 +333,6 @@ class DetectionAndScoring(QRunnable):
                     previous_img = img_roi
                     # TODO: Separate show image and processing image with cv2.copy
                     # cv2.ellipse(img_roi, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
-                    # check if dartboard is detected
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_1 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 1)
@@ -365,9 +340,7 @@ class DetectionAndScoring(QRunnable):
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_5 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_6 / 100)), (255, 0, 255), 1)
 
-                    cv2.ellipse(img_roi, ellipse, (0, 255, 0), 2)
-                    # if dart_point is not None:
-                    #     cv2.line(img_roi, center_ellipse, dart_point, (255, 0, 0), 2)
+
 
                     fps, img_roi = fpsReader.update(img_roi)
                     cv2.imshow("Dart Settings", utils.rez(img_roi, 1.5))
@@ -382,6 +355,14 @@ class DetectionAndScoring(QRunnable):
                     cap.release()
                     exit()
             # UIFunctions.update_labels(window)
+
+    def draw_detected_darts(self, dart_point, pt1, pt2, pt3, thresh):
+        # Display the Dart point
+        cv2.circle(thresh, dart_point, 4, (0, 0, 255), -1)
+        # Display the triangles
+        cv2.line(thresh, pt1.ravel(), pt2.ravel(), (255, 0, 255), 2)
+        cv2.line(thresh, pt2.ravel(), pt3.ravel(), (255, 0, 255), 2)
+        cv2.line(thresh, pt3.ravel(), pt1.ravel(), (255, 0, 255), 2)
 
     def prepare_differnce_image(self, TRIANGLE_DETECT_THRESH, difference):
         blur = cv2.GaussianBlur(difference, (5, 5), 0)
