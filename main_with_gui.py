@@ -40,7 +40,6 @@ CAMERA_NUMBER = 1  # 0,1 is built-in, 2 is external webcam
 TRIANGLE_DETECT_THRESH = 11
 minArea = 800
 maxArea = 4000
-useMovingAverage = False
 score1 = DartScore.Score(501, True)
 score2 = DartScore.Score(501, True)
 scored_values = []
@@ -70,7 +69,7 @@ if loadSavedParameters:
     # pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
     meanMTX = pickle.load(pickle_in_MTX)
     print(meanMTX)
-    pickle_in_DIST = open("PickleFiles/dist _cheap_webcam_good_target.pickle", "rb")
+    pickle_in_DIST = open("PickleFiles/dist_cheap_webcam_good_target.pickle", "rb")
     # pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
     meanDIST = pickle.load(pickle_in_DIST)
     print(meanDIST)
@@ -91,20 +90,29 @@ previous_img = np.zeros((target_ROI_size[0], target_ROI_size[1], 3)).astype(np.u
 difference = np.zeros(target_ROI_size).astype(np.uint8)
 img_undist = np.zeros(target_ROI_size).astype(np.uint8)
 
-default_img = np.zeros(target_ROI_size).astype(np.uint8)
+default_img = None
 
 
 def detect_dart_circle_and_set_limits(img_roi):
-    cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
+    # cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
+    cannyLow = 80
+    cannyHigh = 160
+    noGauss = 2
+    minArea = 800
+    erosions = 1
+    dilations = 1
+    epsilon = 5/1000
+    showFilters = 0
+    automaticMode = 1
+    threshold_new = 32/100
     global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current,\
-        y_offset_current, TRIANGLE_DETECT_THRESH
+            y_offset_current, TRIANGLE_DETECT_THRESH
     imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
                                                                 gaussFilters=noGauss, minArea=minArea,
                                                                 epsilon=epsilon, draw=False,
                                                                 erosions=erosions, dilations=dilations,
                                                                 showFilters=showFilters)
-    TRIANGLE_DETECT_THRESH, minArea, maxArea, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
-    radius_1, radius_2, radius_3 = 5, 10, 58
+    radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
     # Create Radien in pixels
     for cnt in contours:
         if 200000 / 4 < cnt[1] < 1000000 / 4:
@@ -173,7 +181,7 @@ class DefaultImageSetter(QRunnable):
         super().__init__()
 
     def run(self):
-        global default_img
+        global default_img, markerCorners, markerIds
         while True:
             success, img = cap.read()
             if success:
@@ -201,7 +209,7 @@ class DetectionAndScoring(QRunnable):
 
     def __init__(self):
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, \
-            useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist
+             score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist
         super().__init__()
         gui.create_gui()
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
@@ -210,7 +218,7 @@ class DetectionAndScoring(QRunnable):
 
     def run(self):
         global previous_img, difference, default_img, ACTIVE_PLAYER, UNDO_LAST_FLAG
-        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, useMovingAverage, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
+        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
         global new_dart_point, update_dart_point, minArea
         while True:
             if STOP_DETECTION:
@@ -232,8 +240,9 @@ class DetectionAndScoring(QRunnable):
                     detect_dart_circle_and_set_limits(img_roi=img_roi)
 
                     # get the difference image
-                    if np.all(default_img==0): #TODO: Bad fix but works
+                    if default_img is None or np.all(default_img==0): #TODO: Bad fix but works
                         default_img = img_roi.copy()
+
                     difference = cv2.absdiff(img_roi, default_img)
                     # blur it for better edges
                     blur = cv2.GaussianBlur(difference, (5, 5), 0)
@@ -242,21 +251,8 @@ class DetectionAndScoring(QRunnable):
                     blur = cv2.bilateralFilter(blur, 9, 75, 75)
                     ret, thresh = cv2.threshold(blur, TRIANGLE_DETECT_THRESH, 255, 0)
 
-                    if useMovingAverage:
-                        images_for_rolling_average.append(thresh)
-                        nr_imgs = 10
-                        if len(images_for_rolling_average) > nr_imgs:
-                            out = images_for_rolling_average[-1]
-                            for j in range(nr_imgs - 1, 0, -1):
-                                # out = cv2.add(images_for_rolling_average[j], out)
-                                out = cv2.addWeighted(images_for_rolling_average[j], 0.5, out, 0.5, 1)
-                            images_for_rolling_average = images_for_rolling_average[1:20]
-                        else:
-                            out = thresh
-                    else:
-                        out = thresh
 
-                    gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
+                    gray = cv2.cvtColor(thresh, cv2.COLOR_BGR2GRAY)
                     contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                     # minArea = minArea*100
@@ -282,6 +278,7 @@ class DetectionAndScoring(QRunnable):
                             # Display the Dart point
                             cv2.circle(thresh, dart_point, 4, (0, 0, 255), -1)
                             cv2.circle(img_roi, dart_point, 4, (0, 0, 255), -1)
+
 
                             radius, angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], dart_point[0], dart_point[1])
                             value, mult = dart_scorer_util.evaluateThrow(radius, angle)
@@ -342,11 +339,12 @@ class DetectionAndScoring(QRunnable):
                                 scored_values = []
                                 scored_mults = []
 
-                    cv2.imshow("Threshold", out)
+                    cv2.imshow("Threshold", thresh)
 
                     previous_img = img_roi
                     # TODO: Separate show image and processing image with cv2.copy
                     # cv2.ellipse(img_roi, (int(x), int(y)), (int(a), int(b)), int(angle), 0.0, 360.0, (255, 0, 0))
+                    # check if dartboard is detected
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_1 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_2 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_3 / 100)), (255, 0, 255), 1)
@@ -364,7 +362,7 @@ class DetectionAndScoring(QRunnable):
                     print("NO MARKERS FOUND!")
                     cv2.putText(img_undist, "NO MARKERS FOUND", (300, 300), cv2.FONT_HERSHEY_COMPLEX, 3, (255, 0, 255), 3)
                     cv2.imshow("Dart Settings", img_undist)
-                    sleep(1)
+                    sleep(0.1)
 
                 cv2.waitKey(1)
                 if cv2.waitKey(1) & 0xff == ord('q'):

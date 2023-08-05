@@ -71,7 +71,7 @@ if loadSavedParameters:
     # pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
     meanMTX = pickle.load(pickle_in_MTX)
     print(meanMTX)
-    pickle_in_DIST = open("PickleFiles/dist _cheap_webcam_good_target.pickle", "rb")
+    pickle_in_DIST = open("PickleFiles/dist_cheap_webcam_good_target.pickle", "rb")
     # pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
     meanDIST = pickle.load(pickle_in_DIST)
     print(meanDIST)
