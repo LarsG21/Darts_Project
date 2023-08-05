@@ -31,7 +31,7 @@ UNDO_LAST_FLAG = False
 DARTBOARD_AREA = 0
 
 # #############  Config  ####################
-
+USE_CAMERA_CALIBRATION_TO_UNDISTORT = True
 loadSavedParameters = True
 rows = 6  # 17   6
 columns = 9  # 28    9
@@ -65,23 +65,24 @@ cap.set(cv2.CAP_PROP_FPS, 30)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-if loadSavedParameters:
-    pickle_in_MTX = open("PickleFiles/mtx_cheap_webcam_good_target.pickle", "rb")
-    # pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
-    meanMTX = pickle.load(pickle_in_MTX)
-    print(meanMTX)
-    pickle_in_DIST = open("PickleFiles/dist_cheap_webcam_good_target.pickle", "rb")
-    # pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
-    meanDIST = pickle.load(pickle_in_DIST)
-    print(meanDIST)
-    print("Parameters Loaded")
-else:
-    meanMTX, meanDIST, uncertaintyMTX, uncertaintyDIST = CalibrationWithUncertainty.calibrateCamera(cap=cap, rows=rows,
-                                                                                                    columns=columns,
-                                                                                                    squareSize=squareSize,
-                                                                                                    runs=calibrationRuns,
-                                                                                                    saveImages=False,
-                                                                                                    webcam=True)
+if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+    if loadSavedParameters:
+        pickle_in_MTX = open("PickleFiles/mtx_cheap_webcam_good_target.pickle", "rb")
+        # pickle_in_MTX = open("PickleFiles/mtx_surface_back.pickle", "rb")
+        meanMTX = pickle.load(pickle_in_MTX)
+        print(meanMTX)
+        pickle_in_DIST = open("PickleFiles/dist_cheap_webcam_good_target.pickle", "rb")
+        # pickle_in_DIST = open("PickleFiles/dist_surface_back.pickle", "rb")
+        meanDIST = pickle.load(pickle_in_DIST)
+        print(meanDIST)
+        print("Parameters Loaded")
+    else:
+        meanMTX, meanDIST, uncertaintyMTX, uncertaintyDIST = CalibrationWithUncertainty.calibrateCamera(cap=cap, rows=rows,
+                                                                                                        columns=columns,
+                                                                                                        squareSize=squareSize,
+                                                                                                        runs=calibrationRuns,
+                                                                                                        saveImages=False,
+                                                                                                        webcam=True)
 target_ROI_size = (600, 600)
 resize_for_squish = (535, 600)
 
@@ -115,8 +116,9 @@ def detect_dart_circle_and_set_limits(img_roi):
                                                                 showFilters=showFilters)
     radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
     # Create Radien in pixels
+    image_area = img_roi.shape[0] * img_roi.shape[1]
     for cnt in contours:
-        if 200000 / 4 < cnt[1] < 1000000 / 4:
+        if image_area*0.5 < cnt[1] < image_area*0.9:        # Dart board should take between 50% and 90% of the image
             # Create the outermost Circle
             if ellipse is None or x_offset_current != x_offset or y_offset_current != y_offset:  # Save the outer most ellipse for later to avoid useless re calculation !
                 x_offset_current, y_offset_current = x_offset, y_offset
@@ -191,7 +193,10 @@ class DefaultImageSetter(QRunnable):
         while True:
             success, img = cap.read()
             if success:
-                img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+                    img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                else:
+                    img_undist = img
                 img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False, draw=True)
                 if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
                     img_roi = cv2.resize(img_roi, resize_for_squish)
@@ -218,7 +223,7 @@ class DetectionAndScoring(QRunnable):
 
     def __init__(self):
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, \
-             score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist
+             score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img
         super().__init__()
         gui.create_gui()
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
@@ -235,7 +240,10 @@ class DetectionAndScoring(QRunnable):
             fpsReader = FPS()
             success, img = cap.read()
             if success:
-                img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+                    img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                else:
+                    img_undist = img
                 img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False, hold_position=True)
                 if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
                     img_roi = cv2.resize(img_roi, resize_for_squish)
@@ -318,7 +326,10 @@ class DetectionAndScoring(QRunnable):
                                     UIFunctions.stop_detection_and_scoring(window)
                                     success, img = cap.read()   #Reset the default image after every dart
                                     if success:
-                                        img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                                        if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+                                            img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
+                                        else:
+                                            img_undist = img
                                     default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
                                     if not UNDO_LAST_FLAG:
                                         if not STOP_DETECTION:
