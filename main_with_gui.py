@@ -133,6 +133,8 @@ def detect_dart_circle_and_set_limits(img_roi):
                 dart_scorer_util.outerTripleLimit = a * (radius_4 / 100)
                 dart_scorer_util.innerDoubleLimit = a * (radius_5 / 100)
                 dart_scorer_util.outerBoardLimit = a * (radius_6 / 100)
+                return True
+    return False
 
 
 class MainWindow(QMainWindow):
@@ -182,13 +184,11 @@ class DefaultImageSetter(QRunnable):
 
     def run(self):
         global default_img, markerCorners, markerIds
+        found_markers = False
         while True:
             success, img = cap.read()
             if success:
                 img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-                cv2.putText(img_undist, "Press x to take and choose an image shown in 'Default' as default", (5, 20),
-                            cv2.FONT_HERSHEY_COMPLEX, 0.45, (0, 0, 255))
-                cv2.imshow("Preview", img_undist)
                 img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
                 if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
                     img_roi = cv2.resize(img_roi, resize_for_squish)
@@ -196,10 +196,16 @@ class DefaultImageSetter(QRunnable):
                     print("Set default image")
                     cv2.imshow("Default", default_img)
                     cv2.waitKey(1)
-                if cv2.waitKey(1) & 0xff == ord('x'):
-                    cv2.destroyWindow("Preview")
-                    cv2.destroyWindow("Default")
-                    break
+                    found_markers = True
+                if found_markers:
+                    cv2.putText(img_undist,"Found markers press x to save", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    if cv2.waitKey(1) & 0xff == ord('x'):
+                        cv2.destroyWindow("Preview")
+                        cv2.destroyWindow("Default")
+                        break
+                else:
+                    cv2.putText(img_undist,"No markers found", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                cv2.imshow("Preview", img_undist)
 
 
 class DetectionAndScoring(QRunnable):
@@ -227,7 +233,6 @@ class DetectionAndScoring(QRunnable):
             success, img = cap.read()
             if success:
                 img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-                # cv2.imshow("Undist", img_undist)
                 img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False, hold_position=True)
                 if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
                     img_roi = cv2.resize(img_roi, resize_for_squish)
@@ -237,7 +242,10 @@ class DetectionAndScoring(QRunnable):
 
                     cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
-                    detect_dart_circle_and_set_limits(img_roi=img_roi)
+                    ret = detect_dart_circle_and_set_limits(img_roi=img_roi)
+                    if not ret:
+                        print("No dartboard detected !")
+                        continue
 
                     # get the difference image
                     if default_img is None or np.all(default_img==0): #TODO: Bad fix but works
