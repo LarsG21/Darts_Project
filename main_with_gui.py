@@ -253,14 +253,7 @@ class DetectionAndScoring(QRunnable):
 
                     difference = cv2.absdiff(img_roi, default_img)
                     # blur it for better edges
-                    blur = cv2.GaussianBlur(difference, (5, 5), 0)
-                    for i in range(10):
-                        blur = cv2.GaussianBlur(blur, (9, 9), 1)
-                    blur = cv2.bilateralFilter(blur, 9, 75, 75)
-                    ret, thresh = cv2.threshold(blur, TRIANGLE_DETECT_THRESH, 255, 0)
-
-
-                    gray = cv2.cvtColor(thresh, cv2.COLOR_BGR2GRAY)
+                    gray, thresh = self.prepare_differnce_image(TRIANGLE_DETECT_THRESH, difference)
                     contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                     # minArea = minArea*100
@@ -377,6 +370,15 @@ class DetectionAndScoring(QRunnable):
                     cap.release()
                     exit()
             # UIFunctions.update_labels(window)
+
+    def prepare_differnce_image(self, TRIANGLE_DETECT_THRESH, difference):
+        blur = cv2.GaussianBlur(difference, (5, 5), 0)
+        for i in range(10):
+            blur = cv2.GaussianBlur(blur, (9, 9), 1)
+        blur = cv2.bilateralFilter(blur, 9, 75, 75)
+        ret, thresh = cv2.threshold(blur, TRIANGLE_DETECT_THRESH, 255, 0)
+        gray = cv2.cvtColor(thresh, cv2.COLOR_BGR2GRAY)
+        return gray, thresh
 
 
 class UIFunctions(QMainWindow):
