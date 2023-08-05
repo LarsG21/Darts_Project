@@ -84,7 +84,7 @@ if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
                                                                                                         saveImages=False,
                                                                                                         webcam=True)
 target_ROI_size = (600, 600)
-resize_for_squish = (535, 600)
+resize_for_squish = (600, 600)      # Squish the image if the circle doesnt quite fit
 
 Scaling_factor_for_x_placing_in_gui = (501/resize_for_squish[0], 501/resize_for_squish[1])
 
@@ -206,7 +206,7 @@ class DefaultImageSetter(QRunnable):
                     cv2.waitKey(1)
                     found_markers = True
                 if found_markers:
-                    cv2.putText(img_undist,"Found markers press x to save", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv2.putText(img_undist,"Found markers press/hold x to save", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                     if cv2.waitKey(1) & 0xff == ord('x'):
                         cv2.destroyWindow("Preview")
                         cv2.destroyWindow("Default")
