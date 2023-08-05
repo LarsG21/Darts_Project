@@ -281,46 +281,19 @@ class DetectionAndScoring(QRunnable):
                     new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
                     new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
 
-                    if len(scored_values) <= 20:  # Wait for 20 Results
+                    if len(scored_values) <= 20:
                         scored_values.append(new_val)
                         scored_mults.append(new_mult)
                     else:
-                        if UNDO_LAST_FLAG:
-                            window.ui.press_enter_label.setText("")
                         update_dart_point = True
                         final_val = mode(scored_values)  # Take the most frequent result and use that as the final result
                         final_mult = mode(scored_mults)
                         values_of_round.append(final_val)
                         mults_of_round.append(final_mult)
-                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                        # print(f"Final val {final_val}")
-                        # print(f"Final mult {final_mult}")
-                        # Continue if enter is pressed
+                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish) # Reset the default image after every dart
                         if len(values_of_round) == 3:
-                            UNDO_LAST_FLAG = False
-                            # if cv2.waitKey(0) & 0xFF == ord('\r'):
-                            # if window.ui.continue_button.isChecked():
-                            UIFunctions.stop_detection_and_scoring(window)
-                            success, img = cap.read()  # Reset the default image after every dart
-                            if success:
-                                if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
-                                    img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-                                else:
-                                    img_undist = img
-                            default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                            if not UNDO_LAST_FLAG:
-                                if not STOP_DETECTION:
-                                    window.ui.press_enter_label.setText("")
-                                if ACTIVE_PLAYER == 1:
-                                    dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                    ACTIVE_PLAYER = 2
-                                elif ACTIVE_PLAYER == 2:
-                                    dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                    ACTIVE_PLAYER = 1
-                                values_of_round = []
-                                mults_of_round = []
-                            else:
-                                UNDO_LAST_FLAG = False
+                            self.reset_default_image_after_player()
+                            self.enter_score_of_one_player(score1, score2)
                         scored_values = []
                         scored_mults = []
 
@@ -350,7 +323,52 @@ class DetectionAndScoring(QRunnable):
                     exit()
             # UIFunctions.update_labels(window)
 
+    def reset_default_image_after_player(self):
+        """
+        Resets the default image after a player has thrown 3 darts and triggers the corresponding gui functions
+        :return:
+        """
+        global default_img
+        UIFunctions.stop_detection_and_scoring(window)
+        success, img = cap.read()  # Reset the default image after every dart
+        if success:
+            if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+                img = utils.undistortFunction(img, meanMTX, meanDIST)
+            else:
+                img = img
+        default_img = utils.reset_default_image(img, target_ROI_size, resize_for_squish)
+
+    def enter_score_of_one_player(self, score1, score2):
+        """
+        Enters the score of one player into the dart scorer util
+        :param score1:
+        :param score2:
+        :return:
+        """
+        global UNDO_LAST_FLAG, default_img, ACTIVE_PLAYER, values_of_round, mults_of_round
+        UNDO_LAST_FLAG = False
+        # if cv2.waitKey(0) & 0xFF == ord('\r'):
+        # if window.ui.continue_button.isChecked():
+        if not UNDO_LAST_FLAG:
+            if not STOP_DETECTION:
+                window.ui.press_enter_label.setText("")
+            if ACTIVE_PLAYER == 1:
+                dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                ACTIVE_PLAYER = 2
+            elif ACTIVE_PLAYER == 2:
+                dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                ACTIVE_PLAYER = 1
+            values_of_round = []
+            mults_of_round = []
+        else:
+            UNDO_LAST_FLAG = False
+
     def get_biggest_contour(self, contours):
+        """
+        Get the biggest contour from a list of contours
+        :param contours:
+        :return:
+        """
         contour = None
         for contour in contours:
             # if there are still multiple contours, take the one with the biggest area
@@ -360,6 +378,15 @@ class DetectionAndScoring(QRunnable):
         return contour
 
     def draw_detected_darts(self, dart_point, pt1, pt2, pt3, thresh):
+        """
+        Draw the detected darts on the threshold image as triangle and a dot indicating the dart tip
+        :param dart_point: The point of the dart tip
+        :param pt1: Triangle point 1
+        :param pt2: Triangle point 2
+        :param pt3: Triangle point 3
+        :param thresh: the threshold image
+        :return:
+        """
         # Display the Dart point
         cv2.circle(thresh, dart_point, 4, (0, 0, 255), -1)
         # Display the triangles
@@ -368,6 +395,12 @@ class DetectionAndScoring(QRunnable):
         cv2.line(thresh, pt3.ravel(), pt1.ravel(), (255, 0, 255), 2)
 
     def prepare_differnce_image(self, TRIANGLE_DETECT_THRESH, difference):
+        """
+        Prepare the difference image for triangle detection, by applying a bilateral filter, gaussian blur and thresholding
+        :param TRIANGLE_DETECT_THRESH:
+        :param difference:
+        :return:
+        """
         blur = cv2.GaussianBlur(difference, (5, 5), 0)
         for i in range(10):
             blur = cv2.GaussianBlur(blur, (9, 9), 1)
