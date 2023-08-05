@@ -19,18 +19,6 @@ from FPS import FPS
 from QT_GUI_Elements.qt_ui_classes import DartPositionLabel
 from QT_GUI_Elements.ui_dart_main_gui import Ui_DartScorer
 
-# Globals
-points = []
-intersectp = []
-ellipse_vertices = []
-newpoints = []
-intersectp_s = []
-dart_tip = None
-ACTIVE_PLAYER = 1
-UNDO_LAST_FLAG = False
-DARTBOARD_AREA = 0
-center_ellipse = (0, 0)
-
 # #############  Config  ####################
 USE_CAMERA_CALIBRATION_TO_UNDISTORT = True
 loadSavedParameters = True
@@ -43,13 +31,19 @@ score2 = DartScore.Score(501, True)
 scored_values = []
 scored_mults = []
 
+# Globals
+points = []
+dart_tip = None
+ACTIVE_PLAYER = 1
+UNDO_LAST_FLAG = False
+DARTBOARD_AREA = 0
+center_ellipse = (0, 0)
 values_of_round = []
 mults_of_round = []
 
 new_dart_tip = None
 update_dart_point = False
 
-images_for_rolling_average = []
 ellipse = None
 x_offset_current, y_offset_current = 0, 0
 
@@ -207,7 +201,7 @@ class DetectionAndScoring(QRunnable):
         self.ser.close()
 
     def __init__(self):
-        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_tip, TRIANGLE_DETECT_THRESH, \
+        global points, dart_tip, TRIANGLE_DETECT_THRESH, \
             score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img
         super().__init__()
         gui.create_gui()
@@ -216,7 +210,7 @@ class DetectionAndScoring(QRunnable):
 
     def run(self):
         global previous_img, difference, default_img, ACTIVE_PLAYER, UNDO_LAST_FLAG
-        global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_tip, TRIANGLE_DETECT_THRESH, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
+        global points, dart_tip, TRIANGLE_DETECT_THRESH, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
         global new_dart_tip, update_dart_point, minArea, DARTBOARD_AREA
         while True:
             if STOP_DETECTION:
@@ -252,8 +246,8 @@ class DetectionAndScoring(QRunnable):
 
                     minimal_darts_area = 0.003 * DARTBOARD_AREA  # Darts are > 0.3% of the dartboard area
                     maximal_darts_area = 0.1 * DARTBOARD_AREA  # Darts are < 10% of the dartboard area
-                    contours = [i for i in contours if maximal_darts_area> cv2.contourArea(i) > minimal_darts_area]    # Filter out contours that are too small
-                    contour = self.get_biggest_contour(contours)    # Get the biggest contour
+                    contours = [i for i in contours if maximal_darts_area > cv2.contourArea(i) > minimal_darts_area]  # Filter out contours that are too small
+                    contour = self.get_biggest_contour(contours)  # Get the biggest contour
                     if contour is None:
                         continue  # If no contour was found continue with next frame
                     points_list = contour.reshape(contour.shape[0], contour.shape[2])
@@ -290,7 +284,7 @@ class DetectionAndScoring(QRunnable):
                         final_mult = mode(scored_mults)
                         values_of_round.append(final_val)
                         mults_of_round.append(final_mult)
-                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish) # Reset the default image after every dart
+                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)  # Reset the default image after every dart
                         if len(values_of_round) == 3:
                             self.reset_default_image_after_player()
                             self.enter_score_of_one_player(score1, score2)
