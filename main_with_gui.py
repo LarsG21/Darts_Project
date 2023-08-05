@@ -28,6 +28,7 @@ intersectp_s = []
 dart_point = None
 ACTIVE_PLAYER = 1
 UNDO_LAST_FLAG = False
+DARTBOARD_AREA = 0
 
 # #############  Config  ####################
 
@@ -106,7 +107,7 @@ def detect_dart_circle_and_set_limits(img_roi):
     automaticMode = 1
     threshold_new = 32/100
     global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current,\
-            y_offset_current, TRIANGLE_DETECT_THRESH
+            y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA
     imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
                                                                 gaussFilters=noGauss, minArea=minArea,
                                                                 epsilon=epsilon, draw=False,
@@ -120,6 +121,8 @@ def detect_dart_circle_and_set_limits(img_roi):
             if ellipse is None or x_offset_current != x_offset or y_offset_current != y_offset:  # Save the outer most ellipse for later to avoid useless re calculation !
                 x_offset_current, y_offset_current = x_offset, y_offset
                 ellipse = cv2.fitEllipse(cnt[4])  # Also a benefit for stability of the outer ellipse --> not jumping from frame to frame
+                # get area of ellipse
+                DARTBOARD_AREA = cv2.contourArea(cnt[4])
                 x, y = ellipse[0]
                 a, b = ellipse[1]
                 angle = ellipse[2]
@@ -189,7 +192,7 @@ class DefaultImageSetter(QRunnable):
             success, img = cap.read()
             if success:
                 img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-                img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False)
+                img_roi = ContourUtils.extract_roi_from_4_aruco_markers(img_undist, target_ROI_size, use_outer_corners=False, draw=True)
                 if img_roi is not None and img_roi.shape[1] > 0 and img_roi.shape[0] > 0:
                     img_roi = cv2.resize(img_roi, resize_for_squish)
                     default_img = img_roi
@@ -225,7 +228,7 @@ class DetectionAndScoring(QRunnable):
     def run(self):
         global previous_img, difference, default_img, ACTIVE_PLAYER, UNDO_LAST_FLAG
         global points, intersectp, ellipse_vertices, newpoints, intersectp_s, dart_point, TRIANGLE_DETECT_THRESH, score1, score2, scored_values, scored_mults, mults_of_round, values_of_round
-        global new_dart_point, update_dart_point, minArea
+        global new_dart_point, update_dart_point, minArea, DARTBOARD_AREA
         while True:
             if STOP_DETECTION:
                 break
@@ -240,12 +243,12 @@ class DetectionAndScoring(QRunnable):
                     img_show = cv2.resize(img_roi, dsize=(400, 400))
                     cv2.imshow("Live", img_show)
 
-                    cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
+                    # cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
 
                     ret = detect_dart_circle_and_set_limits(img_roi=img_roi)
-                    if not ret:
-                        print("No dartboard detected !")
-                        continue
+                    # if not ret:
+                    #     print("No dartboard detected !")
+                    #     continue
 
                     # get the difference image
                     if default_img is None or np.all(default_img==0): #TODO: Bad fix but works
@@ -256,9 +259,7 @@ class DetectionAndScoring(QRunnable):
                     gray, thresh = self.prepare_differnce_image(TRIANGLE_DETECT_THRESH, difference)
                     contours, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                    # minArea = minArea*100
-                    # maxArea = minArea*100
-                    minArea = 600
+                    minArea = 0.003 * DARTBOARD_AREA
                     for i in contours:
                         area = cv2.contourArea(i)
                         if minArea < area:

@@ -123,6 +123,8 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
     # Detect the markers in the image
     if not hold_position:
         markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
+        if draw:
+            frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
     else:
         markerCorners = MARKER_CORNERS_SAVE
         markerIds = MARKER_IDS_SAVE
@@ -143,14 +145,4 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
             # save the detected markers to npy file
             MARKER_IDS_SAVE = markerIds
             MARKER_CORNERS_SAVE = markerCorners
-            if draw:
-                for point in [refPt1, refPt2, refPt3, refPt4]:
-                    cv2.circle(frame, point, 3, (255, 0, 255), 4)
             return warped_image2
-
-
-
-
-
-
-
