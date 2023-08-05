@@ -250,76 +250,79 @@ class DetectionAndScoring(QRunnable):
                     gray, thresh = self.prepare_differnce_image(TRIANGLE_DETECT_THRESH, difference)
                     contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                    minArea = 0.003 * DARTBOARD_AREA  # Darts are > 0.3% of the dartboard area
-                    contours = [i for i in contours if cv2.contourArea(i) > minArea]    # Filter out contours that are too small
-                    for contour in contours:
-                        points_list = contour.reshape(contour.shape[0], contour.shape[2])
-                        triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
-                        triangle_np_array = cv2.UMat.get(triangle[1])
-                        if triangle_np_array is not None:
-                            pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
-                        else:
-                            pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
+                    minimal_darts_area = 0.003 * DARTBOARD_AREA  # Darts are > 0.3% of the dartboard area
+                    maximal_darts_area = 0.1 * DARTBOARD_AREA  # Darts are < 10% of the dartboard area
+                    contours = [i for i in contours if maximal_darts_area> cv2.contourArea(i) > minimal_darts_area]    # Filter out contours that are too small
+                    contour = self.get_biggest_contour(contours)    # Get the biggest contour
+                    if contour is None:
+                        continue  # If no contour was found continue with next frame
+                    points_list = contour.reshape(contour.shape[0], contour.shape[2])
+                    triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
+                    triangle_np_array = cv2.UMat.get(triangle[1])
+                    if triangle_np_array is not None:
+                        pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
+                    else:
+                        pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
 
-                        dart_tip, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
-                        # Display the Dart point
-                        cv2.circle(img_roi, dart_tip, 4, (0, 0, 255), -1)
+                    dart_tip, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
+                    # Display the Dart point
+                    cv2.circle(img_roi, dart_tip, 4, (0, 0, 255), -1)
 
-                        self.draw_detected_darts(dart_tip, pt1, pt2, pt3, thresh)
+                    self.draw_detected_darts(dart_tip, pt1, pt2, pt3, thresh)
 
-                        bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_tip)
-                        cv2.line(img_roi, dart_tip, bottom_point, (0, 0, 255), 2)
+                    bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_tip)
+                    cv2.line(img_roi, dart_tip, bottom_point, (0, 0, 255), 2)
 
-                        k = -0.215  # scaling factor for position adjustment of dart tip
-                        vect = (dart_tip - bottom_point)
-                        new_dart_tip = dart_tip + k * vect
+                    k = -0.215  # scaling factor for position adjustment of dart tip
+                    vect = (dart_tip - bottom_point)
+                    new_dart_tip = dart_tip + k * vect
 
-                        cv2.circle(img_roi, new_dart_tip.astype(np.int32), 4, (0, 255, 0), -1)
-                        new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
-                        new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
+                    cv2.circle(img_roi, new_dart_tip.astype(np.int32), 4, (0, 255, 0), -1)
+                    new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
+                    new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
 
-                        if len(scored_values) <= 20:  # Wait for 20 Results
-                            scored_values.append(new_val)
-                            scored_mults.append(new_mult)
-                        else:
-                            if UNDO_LAST_FLAG:
-                                window.ui.press_enter_label.setText("")
-                            update_dart_point = True
-                            final_val = mode(scored_values)  # Take the most frequent result and use that as the final result
-                            final_mult = mode(scored_mults)
-                            values_of_round.append(final_val)
-                            mults_of_round.append(final_mult)
-                            default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                            # print(f"Final val {final_val}")
-                            # print(f"Final mult {final_mult}")
-                            # Continue if enter is pressed
-                            if len(values_of_round) == 3:
-                                UNDO_LAST_FLAG = False
-                                # if cv2.waitKey(0) & 0xFF == ord('\r'):
-                                # if window.ui.continue_button.isChecked():
-                                UIFunctions.stop_detection_and_scoring(window)
-                                success, img = cap.read()  # Reset the default image after every dart
-                                if success:
-                                    if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
-                                        img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
-                                    else:
-                                        img_undist = img
-                                default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
-                                if not UNDO_LAST_FLAG:
-                                    if not STOP_DETECTION:
-                                        window.ui.press_enter_label.setText("")
-                                    if ACTIVE_PLAYER == 1:
-                                        dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                        ACTIVE_PLAYER = 2
-                                    elif ACTIVE_PLAYER == 2:
-                                        dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
-                                        ACTIVE_PLAYER = 1
-                                    values_of_round = []
-                                    mults_of_round = []
+                    if len(scored_values) <= 20:  # Wait for 20 Results
+                        scored_values.append(new_val)
+                        scored_mults.append(new_mult)
+                    else:
+                        if UNDO_LAST_FLAG:
+                            window.ui.press_enter_label.setText("")
+                        update_dart_point = True
+                        final_val = mode(scored_values)  # Take the most frequent result and use that as the final result
+                        final_mult = mode(scored_mults)
+                        values_of_round.append(final_val)
+                        mults_of_round.append(final_mult)
+                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
+                        # print(f"Final val {final_val}")
+                        # print(f"Final mult {final_mult}")
+                        # Continue if enter is pressed
+                        if len(values_of_round) == 3:
+                            UNDO_LAST_FLAG = False
+                            # if cv2.waitKey(0) & 0xFF == ord('\r'):
+                            # if window.ui.continue_button.isChecked():
+                            UIFunctions.stop_detection_and_scoring(window)
+                            success, img = cap.read()  # Reset the default image after every dart
+                            if success:
+                                if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
+                                    img_undist = utils.undistortFunction(img, meanMTX, meanDIST)
                                 else:
-                                    UNDO_LAST_FLAG = False
-                            scored_values = []
-                            scored_mults = []
+                                    img_undist = img
+                            default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
+                            if not UNDO_LAST_FLAG:
+                                if not STOP_DETECTION:
+                                    window.ui.press_enter_label.setText("")
+                                if ACTIVE_PLAYER == 1:
+                                    dart_scorer_util.update_score(score1, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                    ACTIVE_PLAYER = 2
+                                elif ACTIVE_PLAYER == 2:
+                                    dart_scorer_util.update_score(score2, values_of_round=values_of_round, mults_of_round=mults_of_round)
+                                    ACTIVE_PLAYER = 1
+                                values_of_round = []
+                                mults_of_round = []
+                            else:
+                                UNDO_LAST_FLAG = False
+                        scored_values = []
+                        scored_mults = []
 
                     cv2.imshow("Threshold", thresh)
 
@@ -346,6 +349,15 @@ class DetectionAndScoring(QRunnable):
                     cap.release()
                     exit()
             # UIFunctions.update_labels(window)
+
+    def get_biggest_contour(self, contours):
+        contour = None
+        for contour in contours:
+            # if there are still multiple contours, take the one with the biggest area
+            if len(contours) > 1:
+                contour = max(contours, key=cv2.contourArea)
+            # get the points of the contour
+        return contour
 
     def draw_detected_darts(self, dart_point, pt1, pt2, pt3, thresh):
         # Display the Dart point
