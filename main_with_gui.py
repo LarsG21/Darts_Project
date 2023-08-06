@@ -87,7 +87,7 @@ default_img = None
 
 
 def detect_dart_circle_and_set_limits(img_roi):
-    cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
+    cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = opencv_gui_sliders.updateTrackBar()
     # cannyLow = 80
     # cannyHigh = 160
     # noGauss = 2
@@ -103,7 +103,7 @@ def detect_dart_circle_and_set_limits(img_roi):
                                                                 epsilon=epsilon, draw=False,
                                                                 erosions=erosions, dilations=dilations,
                                                                 showFilters=showFilters)
-    radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
+    radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = opencv_gui_sliders.update_dart_trackbars()
     # Create Radien in pixels
     image_area = img_roi.shape[0] * img_roi.shape[1]
     contours = [cnt for cnt in contours if image_area * 0.5 < cnt[1] < image_area * 0.9]  # Filter out contours that are too small or too big
@@ -219,7 +219,7 @@ class DetectionAndScoring(QRunnable):
         global points, dart_tip, TRIANGLE_DETECT_THRESH, \
             score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img
         super().__init__()
-        gui.create_gui()
+        opencv_gui_sliders.create_gui()
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         cv2.destroyWindow("Object measurement")
 
