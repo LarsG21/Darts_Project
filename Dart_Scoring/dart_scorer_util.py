@@ -38,7 +38,14 @@ listOfFields = {
     (351.0001, 360.000): 6,
 }
 
-def findTipOfDart(pt1, pt2, pt3):
+def find_tip_of_dart(pt1, pt2, pt3):
+    """
+    find the tip of the dart by finding the point with the largest distance to the other two points
+    :param pt1:
+    :param pt2:
+    :param pt3:
+    :return:
+    """
     dart_point = pt1
     rest_pts = [pt2, pt3]
     dist_1_2 = np.linalg.norm(pt1 - pt2)
@@ -56,7 +63,7 @@ def findTipOfDart(pt1, pt2, pt3):
     return dart_point, rest_pts
 
 
-def getRadiusAndAngle(centerX, centerY, pointX, pointY):
+def get_radius_and_angle(centerX, centerY, pointX, pointY):
     """
     get the radius and the angle of the thrown point in relation to the board center
     """
@@ -79,7 +86,7 @@ def getRadiusAndAngle(centerX, centerY, pointX, pointY):
     return radius, angle
 
 
-def evaluateThrow(radius, angle):
+def evaluate_throw(radius, angle):
     """
     evaluates the value and the multiplier of the field with given radius and angle
     """
@@ -116,7 +123,7 @@ def evaluateThrow(radius, angle):
     return value, multiplier
 
 
-def getBottomPoint(pt1: np.ndarray, pt2: np.ndarray, dart_point: np.ndarray):
+def get_bottom_point(pt1: np.ndarray, pt2: np.ndarray):
     """
     finds the point on a triangle of given points, where the line from one corner of the triangle to the hypotenuse
     is orthogonal to the hypotenuse
@@ -124,13 +131,8 @@ def getBottomPoint(pt1: np.ndarray, pt2: np.ndarray, dart_point: np.ndarray):
     if pt1.shape == (1, 2) and pt2.shape == (1, 2):
         pt1, pt2 = pt1.ravel(), pt2.ravel()
     if pt1.shape == (2,) and pt2.shape == (2,):
-        dx = pt2[0] - pt1[0]
-        dy = pt2[1] - pt1[1]
-        d12 = dx ** 2 + dy ** 2
-        u = ((dart_point[0] - pt1[0]) * dx + (dart_point[1] - pt1[1]) * dy) / d12
-        x = pt1[0] + u * dx
-        y = pt1[1] + u * dy
-        return np.array([x, y]).astype(np.int32)
+        center = (pt1 + pt2) / 2
+        return center.astype(np.int32)
     else:
         print("Points have the wrong shape! Cannot find bottom Point.")
 

@@ -40,6 +40,8 @@ DARTBOARD_AREA = 0
 center_ellipse = (0, 0)
 values_of_round = []
 mults_of_round = []
+current_settings = None
+OPENCV_GUI_CREATED = False
 
 new_dart_tip = None
 update_dart_point = False
@@ -97,14 +99,14 @@ def detect_dart_circle_and_set_limits(img_roi):
     # epsilon = 5 / 1000
     # showFilters = 0
     global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current, \
-        y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA
+        y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA, current_settings
     imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
                                                                 gaussFilters=noGauss, minArea=minArea,
                                                                 epsilon=epsilon, draw=False,
                                                                 erosions=erosions, dilations=dilations,
                                                                 showFilters=showFilters)
     radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = opencv_gui_sliders.update_dart_trackbars()
-    # Create Radien in pixels
+    new_settings = [radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset]
     image_area = img_roi.shape[0] * img_roi.shape[1]
     contours = [cnt for cnt in contours if image_area * 0.5 < cnt[1] < image_area * 0.9]  # Filter out contours that are too small or too big
     # get biggest contour
@@ -112,8 +114,10 @@ def detect_dart_circle_and_set_limits(img_roi):
     if cnt is None:
         return
     # Create the outermost Circle
-    if ellipse is None or x_offset_current != x_offset or y_offset_current != y_offset:  # Save the outermost ellipse for later to avoid useless re calculation !
-        x_offset_current, y_offset_current = x_offset, y_offset
+    # if a radius changed
+    if ellipse is None or new_settings != current_settings:  # Save the outermost ellipse for later to avoid useless re calculation !
+        print("Recalculating the outermost ellipse")
+        radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = new_settings
         ellipse = cv2.fitEllipse(cnt[4])  # Also a benefit for stability of the outer ellipse --> not jumping from frame to frame
         # get area of ellipse
         DARTBOARD_AREA = cv2.contourArea(cnt[4])
@@ -130,6 +134,7 @@ def detect_dart_circle_and_set_limits(img_roi):
         dart_scorer_util.outerTripleLimit = a * (radius_4 / 100)
         dart_scorer_util.innerDoubleLimit = a * (radius_5 / 100)
         dart_scorer_util.outerBoardLimit = a * (radius_6 / 100)
+        current_settings = [radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset]
         print("Limits set")
 
 
@@ -217,9 +222,11 @@ class DetectionAndScoring(QRunnable):
 
     def __init__(self):
         global points, dart_tip, TRIANGLE_DETECT_THRESH, \
-            score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img
+            score1, score2, scored_values, scored_mults, mults_of_round, values_of_round, img_undist, default_img, OPENCV_GUI_CREATED
         super().__init__()
-        opencv_gui_sliders.create_gui()
+        if not OPENCV_GUI_CREATED:  # create the gui only once
+            opencv_gui_sliders.create_gui()
+            OPENCV_GUI_CREATED = True
         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
         cv2.destroyWindow("Object measurement")
 
@@ -258,15 +265,21 @@ class DetectionAndScoring(QRunnable):
                     difference = cv2.absdiff(img_roi, default_img)
                     # blur it for better edges
                     gray, thresh = self.prepare_differnce_image(TRIANGLE_DETECT_THRESH, difference)
+
+                    minimal_darts_area = 0.005 * DARTBOARD_AREA  # Darts are > 0.5% of the dartboard area
+                    maximal_darts_area = 0.1 * DARTBOARD_AREA  # Darts are < 10% of the dartboard area
                     contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                    minimal_darts_area = 0.003 * DARTBOARD_AREA  # Darts are > 0.3% of the dartboard area
-                    maximal_darts_area = 0.1 * DARTBOARD_AREA  # Darts are < 10% of the dartboard area
-                    contours = [i for i in contours if maximal_darts_area > cv2.contourArea(i) > minimal_darts_area]  # Filter out contours that are too small or too big
+                    noise_contours = [i for i in contours if cv2.contourArea(i) < minimal_darts_area]
+                    if len(noise_contours) > 10:
+                        print("Too much noise")
+                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
+                        continue
+                    darts_contours = [i for i in contours if minimal_darts_area < cv2.contourArea(i) < maximal_darts_area]  # Filter out contours that are too small or too big
                     # contour = get_biggest_contour(contours)  # Get the biggest contour
                     # if contour is None:
                     #     continue  # If no contour was found continue with next frame
-                    for contour in contours:
+                    for contour in darts_contours:
                         points_list = contour.reshape(contour.shape[0], contour.shape[2])
                         triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
                         triangle_np_array = cv2.UMat.get(triangle[1])
@@ -275,22 +288,24 @@ class DetectionAndScoring(QRunnable):
                         else:
                             pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
 
-                        dart_tip, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
+                        dart_tip, rest_pts = dart_scorer_util.find_tip_of_dart(pt1, pt2, pt3)
                         # Display the Dart point
                         cv2.circle(img_roi, dart_tip, 4, (0, 0, 255), -1)
 
                         self.draw_detected_darts(dart_tip, pt1, pt2, pt3, thresh)
 
-                        bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_tip)
+
+                        bottom_point = dart_scorer_util.get_bottom_point(rest_pts[0], rest_pts[1])
                         cv2.line(img_roi, dart_tip, bottom_point, (0, 0, 255), 2)
+                        cv2.line(thresh, dart_tip, bottom_point, (255, 0, 255), 2)
 
                         k = -0.215  # scaling factor for position adjustment of dart tip
                         vect = (dart_tip - bottom_point)
                         new_dart_tip = dart_tip + k * vect
 
                         cv2.circle(img_roi, new_dart_tip.astype(np.int32), 4, (0, 255, 0), -1)
-                        new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
-                        new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
+                        new_radius, new_angle = dart_scorer_util.get_radius_and_angle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
+                        new_val, new_mult = dart_scorer_util.evaluate_throw(new_radius, new_angle)
 
                         if len(scored_values) <= 20:
                             scored_values.append(new_val)
