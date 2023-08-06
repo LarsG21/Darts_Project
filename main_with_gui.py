@@ -1,5 +1,6 @@
 import pickle
 import sys
+import time
 from statistics import mode
 from time import sleep
 
@@ -78,8 +79,8 @@ if USE_CAMERA_CALIBRATION_TO_UNDISTORT:
                                                                                                         webcam=True)
 target_ROI_size = (600, 600)
 resize_for_squish = (600, 600)  # Squish the image if the circle doesnt quite fit
-
-Scaling_factor_for_x_placing_in_gui = (501 / resize_for_squish[0], 501 / resize_for_squish[1])
+dart_board_in_gui_dimensions = (501, 501)
+Scaling_factor_for_x_placing_in_gui = (dart_board_in_gui_dimensions[0] / resize_for_squish[0], dart_board_in_gui_dimensions[1] / resize_for_squish[1])
 
 previous_img = np.zeros((target_ROI_size[0], target_ROI_size[1], 3)).astype(np.uint8)
 difference = np.zeros(target_ROI_size).astype(np.uint8)
@@ -89,15 +90,15 @@ default_img = None
 
 
 def detect_dart_circle_and_set_limits(img_roi):
-    cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = opencv_gui_sliders.updateTrackBar()
-    # cannyLow = 80
-    # cannyHigh = 160
-    # noGauss = 2
-    # minArea = 800
-    # erosions = 1
-    # dilations = 1
-    # epsilon = 5 / 1000
-    # showFilters = 0
+    # cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = opencv_gui_sliders.updateTrackBar()
+    cannyLow = 80
+    cannyHigh = 160
+    noGauss = 2
+    minArea = 800
+    erosions = 1
+    dilations = 1
+    epsilon = 5 / 1000
+    showFilters = 0
     global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current, \
         y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA, current_settings
     imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
@@ -467,7 +468,7 @@ class UIFunctions(QMainWindow):
         DartPositionId = dart_id
         dart_id = dart_id + 1
         self.DartPositions[DartPositionId] = DartPositionLabel(self.ui.dart_board_image)
-        # print(f"Placing: {str(int(pos_x*Scaling_factor_for_x_placing_in_gui[0])), str(int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))}")
+        print(f"Placing: {str(int(pos_x*Scaling_factor_for_x_placing_in_gui[0])), str(int(pos_y*Scaling_factor_for_x_placing_in_gui[1]))}")
         self.DartPositions[DartPositionId].addDartPosition(int(pos_x * Scaling_factor_for_x_placing_in_gui[0]),
                                                            int(pos_y * Scaling_factor_for_x_placing_in_gui[1]))
 
@@ -506,8 +507,24 @@ class UIFunctions(QMainWindow):
     def update_labels(self):
         global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_tip, update_dart_point
         if update_dart_point and new_dart_tip is not None:
-            # print(f"Updating dart point{new_dart_tip[0], new_dart_tip[1]}")
-            UIFunctions.place_x_on_board(self, new_dart_tip[0], new_dart_tip[1])
+            print(f"Updating dart point in image {new_dart_tip[0], new_dart_tip[1]}")
+            X_OFFSET, Y_OFFSET, _, _, _, _, _, _, _, _ = opencv_gui_sliders.updateTrackBar()
+            # X_OFFSET = 8
+            # Y_OFFSET = 17
+            print(f"OFFSET: {X_OFFSET, Y_OFFSET}")
+            UIFunctions.place_x_on_board(self, 200 - X_OFFSET, 200 - Y_OFFSET)
+            UIFunctions.place_x_on_board(self, 200 - X_OFFSET, 400 - Y_OFFSET)
+            UIFunctions.place_x_on_board(self, 300 - X_OFFSET, 300 - Y_OFFSET)
+            UIFunctions.place_x_on_board(self, 400 - X_OFFSET, 400 - Y_OFFSET)
+            UIFunctions.place_x_on_board(self, 400 - X_OFFSET, 200 - Y_OFFSET)
+            # pyqt sleep without freezing gui
+            # time.sleep(0.1)
+
+
+            # UIFunctions.place_x_on_board(self, 0, 0)
+
+            # UIFunctions.place_x_on_board(self, new_dart_tip[0] -OFFSET, new_dart_tip[1]- OFFSET)
+
             update_dart_point = False
         if ACTIVE_PLAYER == 1:
             self.ui.player_frame.setStyleSheet("background-color: #3a3a3a;")
