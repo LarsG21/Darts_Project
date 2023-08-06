@@ -1,6 +1,5 @@
 import pickle
 import sys
-import time
 from statistics import mode
 from time import sleep
 
@@ -508,22 +507,9 @@ class UIFunctions(QMainWindow):
         global values_of_round, mults_of_round, ACTIVE_PLAYER, new_dart_tip, update_dart_point
         if update_dart_point and new_dart_tip is not None:
             print(f"Updating dart point in image {new_dart_tip[0], new_dart_tip[1]}")
-            X_OFFSET, Y_OFFSET, _, _, _, _, _, _, _, _ = opencv_gui_sliders.updateTrackBar()
-            # X_OFFSET = 8
-            # Y_OFFSET = 17
-            print(f"OFFSET: {X_OFFSET, Y_OFFSET}")
-            UIFunctions.place_x_on_board(self, 200 - X_OFFSET, 200 - Y_OFFSET)
-            UIFunctions.place_x_on_board(self, 200 - X_OFFSET, 400 - Y_OFFSET)
-            UIFunctions.place_x_on_board(self, 300 - X_OFFSET, 300 - Y_OFFSET)
-            UIFunctions.place_x_on_board(self, 400 - X_OFFSET, 400 - Y_OFFSET)
-            UIFunctions.place_x_on_board(self, 400 - X_OFFSET, 200 - Y_OFFSET)
-            # pyqt sleep without freezing gui
-            # time.sleep(0.1)
-
-
-            # UIFunctions.place_x_on_board(self, 0, 0)
-
-            # UIFunctions.place_x_on_board(self, new_dart_tip[0] -OFFSET, new_dart_tip[1]- OFFSET)
+            X_OFFSET = 8
+            Y_OFFSET = 17
+            UIFunctions.place_x_on_board(self, new_dart_tip[0] -X_OFFSET, new_dart_tip[1]- Y_OFFSET)
 
             update_dart_point = False
         if ACTIVE_PLAYER == 1:

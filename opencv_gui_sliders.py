@@ -6,8 +6,8 @@ def updateTrackBar():
     updates the trackbars
     :return: the trackbar positions
     """
-    cannyLow = cv2.getTrackbarPos("X_OFFSET", "Edge Detection Settings")
-    cannyHigh = cv2.getTrackbarPos("Y_OFFSET", "Edge Detection Settings")
+    cannyLow = cv2.getTrackbarPos("Edge Thresh Low", "Edge Detection Settings")
+    cannyHigh = cv2.getTrackbarPos("Edge Thresh High", "Edge Detection Settings")
     noGauss = cv2.getTrackbarPos("Gaussian's", "Edge Detection Settings")
     dilations = cv2.getTrackbarPos("Dilations","Edge Detection Settings")
     erosions = cv2.getTrackbarPos("Erosions", "Edge Detection Settings")
@@ -37,8 +37,8 @@ def resetTrackBar():
     """
     resets trackbars to default values
     """
-    cv2.setTrackbarPos("X_OFFSET", "Edge Detection Settings", 120)
-    cv2.setTrackbarPos("Y_OFFSET", "Edge Detection Settings", 160)
+    cv2.setTrackbarPos("Edge Thresh Low", "Edge Detection Settings", 120)
+    cv2.setTrackbarPos("Edge Thresh High", "Edge Detection Settings", 160)
     cv2.setTrackbarPos("Gaussian's", "Edge Detection Settings", 2)
     cv2.setTrackbarPos("Dilations", "Edge Detection Settings", 6)
     cv2.setTrackbarPos("Erosions", "Edge Detection Settings", 2)
@@ -64,8 +64,8 @@ def create_gui():
     cv2.resizeWindow("General Settings", 400, 100)
     cv2.resizeWindow("Edge Detection Settings", 640, 240)
     cv2.resizeWindow("Dart Settings", 640, 240)
-    cv2.createTrackbar("X_OFFSET", "Edge Detection Settings", 9, 255, empty)
-    cv2.createTrackbar("Y_OFFSET", "Edge Detection Settings", 17, 255, empty)
+    cv2.createTrackbar("Edge Thresh Low", "Edge Detection Settings", 80, 255, empty)
+    cv2.createTrackbar("Edge Thresh High", "Edge Detection Settings", 160, 255, empty)
     cv2.createTrackbar("Gaussian's", "Edge Detection Settings", 2, 20, empty)
     cv2.createTrackbar("Dilations", "Edge Detection Settings", 1, 10, empty)
     cv2.createTrackbar("Erosions", "Edge Detection Settings", 1, 10, empty)
@@ -91,5 +91,5 @@ def create_gui():
     cv2.createTrackbar("Y_Offset", "Dart Settings", 0, 100, empty)
     cv2.setTrackbarMin("Y_Offset", "Dart Settings", -100)
 
-    # cv2.destroyWindow("Edge Detection Settings")
-    # cv2.destroyWindow("General Settings")
+    cv2.destroyWindow("Edge Detection Settings")
+    cv2.destroyWindow("General Settings")
