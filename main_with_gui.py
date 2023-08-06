@@ -13,7 +13,7 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QMessageBox
 import CalibrationWithUncertainty
 import ContourUtils
 from Dart_Scoring import dart_scorer_util, DartScore
-import gui
+import opencv_gui_sliders
 import utils
 from FPS import FPS
 from QT_GUI_Elements.qt_ui_classes import DartPositionLabel
@@ -87,17 +87,15 @@ default_img = None
 
 
 def detect_dart_circle_and_set_limits(img_roi):
-    # cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
-    cannyLow = 80
-    cannyHigh = 160
-    noGauss = 2
-    minArea = 800
-    erosions = 1
-    dilations = 1
-    epsilon = 5 / 1000
-    showFilters = 0
-    automaticMode = 1
-    threshold_new = 32 / 100
+    cannyLow, cannyHigh, noGauss, minArea, erosions, dilations, epsilon, showFilters, automaticMode, threshold_new = gui.updateTrackBar()
+    # cannyLow = 80
+    # cannyHigh = 160
+    # noGauss = 2
+    # minArea = 800
+    # erosions = 1
+    # dilations = 1
+    # epsilon = 5 / 1000
+    # showFilters = 0
     global contours, radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, cnt, ellipse, x, y, a, b, angle, center_ellipse, x_offset_current, \
         y_offset_current, TRIANGLE_DETECT_THRESH, DARTBOARD_AREA
     imgContours, contours, imgCanny = ContourUtils.get_contours(img=img_roi, cThr=(cannyLow, cannyHigh),
@@ -108,29 +106,31 @@ def detect_dart_circle_and_set_limits(img_roi):
     radius_1, radius_2, radius_3, radius_4, radius_5, radius_6, x_offset, y_offset = gui.update_dart_trackbars()
     # Create Radien in pixels
     image_area = img_roi.shape[0] * img_roi.shape[1]
-    for cnt in contours:
-        if image_area * 0.5 < cnt[1] < image_area * 0.9:  # Dart board should take between 50% and 90% of the image
-            # Create the outermost Circle
-            if ellipse is None or x_offset_current != x_offset or y_offset_current != y_offset:  # Save the outer most ellipse for later to avoid useless re calculation !
-                x_offset_current, y_offset_current = x_offset, y_offset
-                ellipse = cv2.fitEllipse(cnt[4])  # Also a benefit for stability of the outer ellipse --> not jumping from frame to frame
-                # get area of ellipse
-                DARTBOARD_AREA = cv2.contourArea(cnt[4])
-                x, y = ellipse[0]
-                a, b = ellipse[1]
-                angle = ellipse[2]
-                center_ellipse = (int(x + x_offset / 10), int(y + y_offset / 10))
-                a = a / 2
-                b = b / 2
-                # set the limits also only once
-                dart_scorer_util.bullsLimit = a * (radius_1 / 100)
-                dart_scorer_util.singleBullsLimit = a * (radius_2 / 100)
-                dart_scorer_util.innerTripleLimit = a * (radius_3 / 100)
-                dart_scorer_util.outerTripleLimit = a * (radius_4 / 100)
-                dart_scorer_util.innerDoubleLimit = a * (radius_5 / 100)
-                dart_scorer_util.outerBoardLimit = a * (radius_6 / 100)
-                return True
-    return False
+    contours = [cnt for cnt in contours if image_area * 0.5 < cnt[1] < image_area * 0.9]  # Filter out contours that are too small or too big
+    # get biggest contour
+    cnt = get_biggest_contour(contours)
+    if cnt is None:
+        return
+    # Create the outermost Circle
+    if ellipse is None or x_offset_current != x_offset or y_offset_current != y_offset:  # Save the outermost ellipse for later to avoid useless re calculation !
+        x_offset_current, y_offset_current = x_offset, y_offset
+        ellipse = cv2.fitEllipse(cnt[4])  # Also a benefit for stability of the outer ellipse --> not jumping from frame to frame
+        # get area of ellipse
+        DARTBOARD_AREA = cv2.contourArea(cnt[4])
+        x, y = ellipse[0]
+        a, b = ellipse[1]
+        angle = ellipse[2]
+        center_ellipse = (int(x + x_offset / 10), int(y + y_offset / 10))
+        a = a / 2
+        b = b / 2
+        # set the limits also only once
+        dart_scorer_util.bullsLimit = a * (radius_1 / 100)
+        dart_scorer_util.singleBullsLimit = a * (radius_2 / 100)
+        dart_scorer_util.innerTripleLimit = a * (radius_3 / 100)
+        dart_scorer_util.outerTripleLimit = a * (radius_4 / 100)
+        dart_scorer_util.innerDoubleLimit = a * (radius_5 / 100)
+        dart_scorer_util.outerBoardLimit = a * (radius_6 / 100)
+        print("Limits set")
 
 
 class MainWindow(QMainWindow):
@@ -195,6 +195,21 @@ class DefaultImageSetter(QRunnable):
                 cv2.imshow("Preview", img_undist)
 
 
+def get_biggest_contour(contours):
+    """
+    Get the biggest contour from a list of contours
+    :param contours:
+    :return:
+    """
+    contour = None
+    for contour in contours:
+        # if there are still multiple contours, take the one with the biggest area
+        if len(contours) > 1:
+            contour = max(contours, key=cv2.contourArea)
+        # get the points of the contour
+    return contour
+
+
 class DetectionAndScoring(QRunnable):
     def closeEvent(self, event):
         super(QRunnable, self).closeEvent(event)
@@ -233,7 +248,8 @@ class DetectionAndScoring(QRunnable):
 
                     ret = detect_dart_circle_and_set_limits(img_roi=img_roi)
                     if center_ellipse == (0, 0):  # If dartboard was never detected raise exception
-                        raise Exception("No dartboard detected please restart!")
+                        print("No dartboard detected!")
+                        continue
 
                     # get the difference image
                     if default_img is None or np.all(default_img == 0):  # TODO: Bad fix but works
@@ -246,50 +262,51 @@ class DetectionAndScoring(QRunnable):
 
                     minimal_darts_area = 0.003 * DARTBOARD_AREA  # Darts are > 0.3% of the dartboard area
                     maximal_darts_area = 0.1 * DARTBOARD_AREA  # Darts are < 10% of the dartboard area
-                    contours = [i for i in contours if maximal_darts_area > cv2.contourArea(i) > minimal_darts_area]  # Filter out contours that are too small
-                    contour = self.get_biggest_contour(contours)  # Get the biggest contour
-                    if contour is None:
-                        continue  # If no contour was found continue with next frame
-                    points_list = contour.reshape(contour.shape[0], contour.shape[2])
-                    triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
-                    triangle_np_array = cv2.UMat.get(triangle[1])
-                    if triangle_np_array is not None:
-                        pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
-                    else:
-                        pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
+                    contours = [i for i in contours if maximal_darts_area > cv2.contourArea(i) > minimal_darts_area]  # Filter out contours that are too small or too big
+                    # contour = get_biggest_contour(contours)  # Get the biggest contour
+                    # if contour is None:
+                    #     continue  # If no contour was found continue with next frame
+                    for contour in contours:
+                        points_list = contour.reshape(contour.shape[0], contour.shape[2])
+                        triangle = cv2.minEnclosingTriangle(cv2.UMat(points_list.astype(np.float32)))
+                        triangle_np_array = cv2.UMat.get(triangle[1])
+                        if triangle_np_array is not None:
+                            pt1, pt2, pt3 = triangle_np_array.astype(np.int32)
+                        else:
+                            pt1, pt2, pt3 = np.array([-1, -1]), np.array([-1, -1]), np.array([-1, -1])
 
-                    dart_tip, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
-                    # Display the Dart point
-                    cv2.circle(img_roi, dart_tip, 4, (0, 0, 255), -1)
+                        dart_tip, rest_pts = dart_scorer_util.findTipOfDart(pt1, pt2, pt3)
+                        # Display the Dart point
+                        cv2.circle(img_roi, dart_tip, 4, (0, 0, 255), -1)
 
-                    self.draw_detected_darts(dart_tip, pt1, pt2, pt3, thresh)
+                        self.draw_detected_darts(dart_tip, pt1, pt2, pt3, thresh)
 
-                    bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_tip)
-                    cv2.line(img_roi, dart_tip, bottom_point, (0, 0, 255), 2)
+                        bottom_point = dart_scorer_util.getBottomPoint(rest_pts[0], rest_pts[1], dart_tip)
+                        cv2.line(img_roi, dart_tip, bottom_point, (0, 0, 255), 2)
 
-                    k = -0.215  # scaling factor for position adjustment of dart tip
-                    vect = (dart_tip - bottom_point)
-                    new_dart_tip = dart_tip + k * vect
+                        k = -0.215  # scaling factor for position adjustment of dart tip
+                        vect = (dart_tip - bottom_point)
+                        new_dart_tip = dart_tip + k * vect
 
-                    cv2.circle(img_roi, new_dart_tip.astype(np.int32), 4, (0, 255, 0), -1)
-                    new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
-                    new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
+                        cv2.circle(img_roi, new_dart_tip.astype(np.int32), 4, (0, 255, 0), -1)
+                        new_radius, new_angle = dart_scorer_util.getRadiusAndAngle(center_ellipse[0], center_ellipse[1], new_dart_tip[0], new_dart_tip[1])
+                        new_val, new_mult = dart_scorer_util.evaluateThrow(new_radius, new_angle)
 
-                    if len(scored_values) <= 20:
-                        scored_values.append(new_val)
-                        scored_mults.append(new_mult)
-                    else:
-                        update_dart_point = True
-                        final_val = mode(scored_values)  # Take the most frequent result and use that as the final result
-                        final_mult = mode(scored_mults)
-                        values_of_round.append(final_val)
-                        mults_of_round.append(final_mult)
-                        default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)  # Reset the default image after every dart
-                        if len(values_of_round) == 3:
-                            self.reset_default_image_after_player()
-                            self.enter_score_of_one_player(score1, score2)
-                        scored_values = []
-                        scored_mults = []
+                        if len(scored_values) <= 20:
+                            scored_values.append(new_val)
+                            scored_mults.append(new_mult)
+                        else:
+                            update_dart_point = True
+                            final_val = mode(scored_values)  # Take the most frequent result and use that as the final result
+                            final_mult = mode(scored_mults)
+                            values_of_round.append(final_val)
+                            mults_of_round.append(final_mult)
+                            default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)  # Reset the default image after every dart
+                            if len(values_of_round) == 3:
+                                self.reset_default_image_after_player()
+                                self.enter_score_of_one_player(score1, score2)
+                            scored_values = []
+                            scored_mults = []
 
                     cv2.imshow("Threshold", thresh)
 
@@ -302,6 +319,7 @@ class DetectionAndScoring(QRunnable):
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_4 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_5 / 100)), (255, 0, 255), 1)
                     cv2.circle(img_roi, center_ellipse, int(a * (radius_6 / 100)), (255, 0, 255), 1)
+                    cv2.ellipse(img_roi, ellipse, (0, 255, 0), 2)
 
                     fps, img_roi = fpsReader.update(img_roi)
                     cv2.imshow("Dart Settings", utils.rez(img_roi, 1.5))
@@ -356,20 +374,6 @@ class DetectionAndScoring(QRunnable):
             mults_of_round = []
         else:
             UNDO_LAST_FLAG = False
-
-    def get_biggest_contour(self, contours):
-        """
-        Get the biggest contour from a list of contours
-        :param contours:
-        :return:
-        """
-        contour = None
-        for contour in contours:
-            # if there are still multiple contours, take the one with the biggest area
-            if len(contours) > 1:
-                contour = max(contours, key=cv2.contourArea)
-            # get the points of the contour
-        return contour
 
     def draw_detected_darts(self, dart_point, pt1, pt2, pt3, thresh):
         """
