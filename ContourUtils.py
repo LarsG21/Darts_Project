@@ -3,8 +3,7 @@ import math
 import cv2
 import numpy as np
 
-markerCorners = None
-markerIds = None
+MARKER_CORNERS_SAVE, MARKER_IDS_SAVE = None, None
 
 def midpoint(ptA, ptB):
     """
@@ -37,13 +36,13 @@ def get_contours(img, shapeROI = (0, 0), cThr=[100, 150], gaussFilters = 1, dila
     for i in range(gaussFilters):
        imgGray = cv2.GaussianBlur(imgGray, (11, 11), 1)
     if showFilters:
-        cv2.imshow("Gauss", cv2.resize(imgGray, (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
+        cv2.imshow("Gauss", cv2.resize(imgGray.copy(), (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
     imgCanny = cv2.Canny(imgGray, cThr[0], cThr[1])
     kernel = np.ones((3, 3))
     imgDial = cv2.dilate(imgCanny, kernel, iterations=dilations)
     imgThre = cv2.erode(imgDial, kernel, iterations=erosions)
     if showFilters:
-        cv2.imshow('Canny', cv2.resize(imgThre, (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
+        cv2.imshow('Canny', cv2.resize(imgThre.copy(), (int(shapeROI[0]), int(shapeROI[1])), interpolation=cv2.INTER_AREA, fx=0.5, fy=0.5))
     contours, hiearchy = cv2.findContours(imgThre, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     finalCountours = []
     for i in contours:
@@ -112,9 +111,8 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
     :param draw: If to draw the detected Corners on the frame
     :return: the ROI
     """
-    global markerCorners, markerIds
+    global MARKER_IDS_SAVE, MARKER_CORNERS_SAVE
     dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
-
     # Initialize the detector parameters using default values
     parameters = cv2.aruco.DetectorParameters_create()
 
@@ -123,14 +121,15 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
         inner_corners = [0, 1, 2, 3]
 
     # Detect the markers in the image
-    if markerCorners is None and markerIds is None and not hold_position:
+    if not hold_position:
         markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
+        if draw:
+            frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
     else:
-        markerCorners = markerCorners
-        markerIds = markerIds
+        markerCorners = MARKER_CORNERS_SAVE
+        markerIds = MARKER_IDS_SAVE
     if markerIds is not None:
         if all(elem in markerIds for elem in [[0], [1], [2], [3]]):
-            # print("All in there")
             index = np.squeeze(np.where(markerIds == 0))
             refPt1 = np.squeeze(markerCorners[index[0]])[inner_corners[0]].astype(int)
             index = np.squeeze(np.where(markerIds == 1))
@@ -143,14 +142,7 @@ def extract_roi_from_4_aruco_markers(frame, dsize=(500, 500), draw=False, use_ou
             h2, status2 = cv2.findHomography(np.asarray([refPt1, refPt2, refPt3, refPt4]), np.asarray([[0, 0], [dsize[0], 0], [dsize[0], dsize[1]], [0, dsize[1]]]))
             warped_image2 = cv2.warpPerspective(frame, h2, dsize)
             # Mark all the Pints
-            if draw:
-                for point in [refPt1, refPt2, refPt3, refPt4]:
-                    cv2.circle(frame, point, 3, (255, 0, 255), 4)
+            # save the detected markers to npy file
+            MARKER_IDS_SAVE = markerIds
+            MARKER_CORNERS_SAVE = markerCorners
             return warped_image2
-
-
-
-
-
-
-
