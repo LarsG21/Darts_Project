@@ -271,11 +271,11 @@ class DetectionAndScoring(QRunnable):
                     contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                     noise_contours = [i for i in contours if cv2.contourArea(i) < minimal_darts_area]
-                    if len(noise_contours) > 10:
+                    darts_contours = [i for i in contours if minimal_darts_area < cv2.contourArea(i) < maximal_darts_area]  # Filter out contours that are too small or too big
+                    if len(noise_contours) > 10 and len(darts_contours) == 0:
                         print("Too much noise")
                         default_img = utils.reset_default_image(img_undist, target_ROI_size, resize_for_squish)
                         continue
-                    darts_contours = [i for i in contours if minimal_darts_area < cv2.contourArea(i) < maximal_darts_area]  # Filter out contours that are too small or too big
                     # contour = get_biggest_contour(contours)  # Get the biggest contour
                     # if contour is None:
                     #     continue  # If no contour was found continue with next frame
