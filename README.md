@@ -36,9 +36,9 @@ The complete detection pipline looks something like this:
 - getting the position of the tip relative to the polar coordinate system
 - Evaluation of the score with [DartScorer()](./Dart_Scoring/DartScorer.py)
 
-The overall pipeline is summarized in this flowchart (currently only in German):
+The overall pipeline is summarized in this flowchart:
 
-![](Resources/Doku/Flussdiagramm_Master_Darts.png)
+![](Resources/Doku/Flowchart_Master_Darts.png)
 ## Setup
 
 ### Hardware
